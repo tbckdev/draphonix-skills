@@ -1,0 +1,42 @@
+{
+  "name": "multi-agent-skills",
+  "owner": {
+    "name": "draphonix",
+    "url": "https://github.com/draphonix"
+  },
+  "metadata": {
+    "description": "Multi-agent coordination skills for planning, orchestration, and autonomous execution with Agent Mail"
+  },
+  "plugins": [
+    {
+      "name": "issue-resolution",
+      "description": "Systematically diagnose and fix bugs through triage, reproduction, root cause analysis, and verified fixes",
+      "source": "./skills/issue-resolution",
+      "strict": false
+    },
+    {
+      "name": "knowledge",
+      "description": "Extracts knowledge from Amp threads and updates project docs",
+      "source": "./skills/knowledge",
+      "strict": false
+    },
+    {
+      "name": "orchestrator",
+      "description": "Plan and coordinate multi-agent bead execution with parallel workers",
+      "source": "./skills/orchestrator",
+      "strict": false
+    },
+    {
+      "name": "planning",
+      "description": "Generate comprehensive plans through discovery, synthesis, verification, and decomposition",
+      "source": "./skills/planning",
+      "strict": false
+    },
+    {
+      "name": "worker",
+      "description": "Execute beads autonomously within a track with context persistence via Agent Mail",
+      "source": "./skills/worker",
+      "strict": false
+    }
+  ]
+}

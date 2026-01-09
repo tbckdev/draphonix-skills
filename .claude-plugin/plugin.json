@@ -1,0 +1,27 @@
+{
+  "name": "multi-agent-skills",
+  "version": "1.0.0",
+  "description": "Multi-agent coordination skills for planning, orchestration, and execution",
+  "skills": [
+    {
+      "name": "issue-resolution",
+      "path": "../skills/issue-resolution/SKILL.md"
+    },
+    {
+      "name": "knowledge",
+      "path": "../skills/knowledge/SKILL.md"
+    },
+    {
+      "name": "orchestrator",
+      "path": "../skills/orchestrator/SKILL.md"
+    },
+    {
+      "name": "planning",
+      "path": "../skills/planning/SKILL.md"
+    },
+    {
+      "name": "worker",
+      "path": "../skills/worker/SKILL.md"
+    }
+  ]
+}
