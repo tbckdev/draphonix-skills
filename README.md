@@ -23,11 +23,11 @@ A collection of Claude Skills for multi-agent coordination, planning, and autono
 ### Install Specific Skills
 
 ```bash
-/plugin install issue-resolution@multi-agent-skills
-/plugin install planning@multi-agent-skills
-/plugin install orchestrator@multi-agent-skills
-/plugin install worker@multi-agent-skills
-/plugin install knowledge@multi-agent-skills
+/plugin install issue-resolution@kuckit
+/plugin install planning@kuckit
+/plugin install orchestrator@kuckit
+/plugin install worker@kuckit
+/plugin install knowledge@kuckit
 ```
 
 ### Direct Installation
