@@ -90,12 +90,12 @@ Topic: "Added retry logic to API client"
 → Confirmed: topic matches code
 ```
 
-| Claim Type        | Verification                           |
-| ----------------- | -------------------------------------- |
-| "Added X"         | `gkg__search_codebase_definitions "X"` |
-| "Refactored Y"    | `finder "Y"` → `gkg__get_references`   |
-| "Changed pattern" | `warpgrep "pattern implementation"`    |
-| "Updated config"  | `gkg__repo_map` on config paths        |
+| Claim Type        | Verification                                |
+| ----------------- | ------------------------------------------- |
+| "Added X"         | `mcp__gkg__search_codebase_definitions "X"` |
+| "Refactored Y"    | `finder "Y"` → `mcp__gkg__get_references`   |
+| "Changed pattern" | `mcp__morph_mcp__warpgrep_codebase_search`  |
+| "Updated config"  | `mcp__gkg__repo_map` on config paths        |
 
 ## Phase 4: Map to Docs
 
@@ -177,7 +177,7 @@ User: "Document the auth refactor from last week"
    → "Auth Refactor" with sub-topics
 
 4. Verify:
-   gkg__search_codebase_definitions "JWTService"
+   mcp__gkg__search_codebase_definitions "JWTService"
    → confirmed at packages/auth/jwt.ts
 
 5. Map docs:
@@ -195,20 +195,20 @@ User: "Document the auth refactor from last week"
 
 ## Tool Quick Reference
 
-| Goal                | Tool                                     |
-| ------------------- | ---------------------------------------- |
-| Find threads        | `find_thread query\|after:Xd\|file:path` |
-| Read thread         | `read_thread` with focused goal          |
-| Parallel extraction | `Task` (spawn multiple)                  |
-| Find definitions    | `gkg__search_codebase_definitions`       |
-| Find references     | `gkg__get_references`                    |
-| Semantic search     | `finder` or `warpgrep`                   |
-| Area overview       | `gkg__repo_map`                          |
-| Synthesis           | `Oracle`                                 |
-| Read doc            | `Read`                                   |
-| Search docs         | `Grep`                                   |
-| Update doc          | `edit_file`                              |
-| Diagram             | `mermaid` with citations                 |
+| Goal                | Tool                                                   |
+| ------------------- | ------------------------------------------------------ |
+| Find threads        | `find_thread query\|after:Xd\|file:path`               |
+| Read thread         | `read_thread` with focused goal                        |
+| Parallel extraction | `Task` (spawn multiple)                                |
+| Find definitions    | `mcp__gkg__search_codebase_definitions`                |
+| Find references     | `mcp__gkg__get_references`                             |
+| Semantic search     | `finder` or `mcp__morph_mcp__warpgrep_codebase_search` |
+| Area overview       | `mcp__gkg__repo_map`                                   |
+| Synthesis           | `Oracle`                                               |
+| Read doc            | `Read`                                                 |
+| Search docs         | `Grep`                                                 |
+| Update doc          | `edit_file`                                            |
+| Diagram             | `mermaid` with citations                               |
 
 ## Quality Checklist
 

@@ -126,7 +126,9 @@ After edits: `get_diagnostics("<edited-file>")`
 
 #### 2.3 For UI Work
 
-Load `frontend-design` skill, then use:
+Load `frontend-design` skill first, then follow this workflow:
+
+##### 2.3.1 Search for Components
 
 **Tool**: `mcp__shadcn__search_items_in_registries`
 
@@ -134,6 +136,41 @@ Load `frontend-design` skill, then use:
 | ------------ | ------------- |
 | `registries` | `["@shadcn"]` |
 | `query`      | `<component>` |
+
+##### 2.3.2 View Component Details
+
+**Tool**: `mcp__shadcn__view_items_in_registries`
+
+| Parameter | Value                     |
+| --------- | ------------------------- |
+| `items`   | `["@shadcn/<component>"]` |
+
+##### 2.3.3 Get Usage Examples
+
+**Tool**: `mcp__shadcn__get_item_examples_from_registries`
+
+| Parameter    | Value              |
+| ------------ | ------------------ |
+| `registries` | `["@shadcn"]`      |
+| `query`      | `<component>-demo` |
+
+##### 2.3.4 Install Component
+
+**Tool**: `mcp__shadcn__get_add_command_for_items`
+
+| Parameter | Value                     |
+| --------- | ------------------------- |
+| `items`   | `["@shadcn/<component>"]` |
+
+Then run the returned command (e.g., `npx shadcn@latest add button`).
+
+##### 2.3.5 Verify Installation
+
+**Tool**: `mcp__shadcn__get_audit_checklist`
+
+| Parameter | Value                             |
+| --------- | --------------------------------- |
+| `reason`  | `Verify <component> installation` |
 
 #### 2.4 Check Inbox Periodically
 
@@ -228,13 +265,17 @@ NEXT:  loop to START
 
 ### Tool Reference
 
-| Task           | Tool                                    |
-| -------------- | --------------------------------------- |
-| Find code      | `mcp__gkg__search_codebase_definitions` |
-| Get definition | `mcp__gkg__get_definition`              |
-| Find usages    | `mcp__gkg__get_references`              |
-| Edit file      | `mcp__morph_mcp__edit_file`             |
-| UI components  | `mcp__shadcn__*`                        |
+| Task              | Tool                                             |
+| ----------------- | ------------------------------------------------ |
+| Find code         | `mcp__gkg__search_codebase_definitions`          |
+| Get definition    | `mcp__gkg__get_definition`                       |
+| Find usages       | `mcp__gkg__get_references`                       |
+| Edit file         | `mcp__morph_mcp__edit_file`                      |
+| Search components | `mcp__shadcn__search_items_in_registries`        |
+| View components   | `mcp__shadcn__view_items_in_registries`          |
+| Get examples      | `mcp__shadcn__get_item_examples_from_registries` |
+| Install component | `mcp__shadcn__get_add_command_for_items`         |
+| Verify install    | `mcp__shadcn__get_audit_checklist`               |
 
 ---
 

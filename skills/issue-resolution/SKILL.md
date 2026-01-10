@@ -50,7 +50,7 @@ Ask clarification questions:
          │
          ▼ (if user can't clarify)
 Explore:
-• gkg: Find auth/login related code
+• mcp__gkg__search_codebase_definitions: Find auth/login related code
 • git log: Recent changes in area
 • Check logs if available
 ```
@@ -60,7 +60,7 @@ Explore:
 ```
 Parse the stack trace:
 • Extract file:line locations
-• gkg get_definition on functions in trace
+• mcp__gkg__get_definition on functions in trace
 • Read surrounding context
          │
          ▼
@@ -80,7 +80,7 @@ Run test in isolation:
          ▼
 Trace implementation:
 • What code does test exercise?
-• gkg get_references on tested function
+• mcp__gkg__get_references on tested function
 • Recent changes to implementation?
 ```
 
@@ -160,8 +160,8 @@ Prove the bug exists and trace the code path.
 ### Code Path Tracing
 
 ```
-gkg get_definition     → Find where error originates
-gkg get_references     → Find callers
+mcp__gkg__get_definition     → Find where error originates
+mcp__gkg__get_references     → Find callers
 git blame <file>       → Who changed it, when
 git log -p <file>      → What changed recently
 ```
@@ -322,7 +322,7 @@ Before fixing, understand blast radius.
 ### Impact Analysis
 
 ```
-gkg get_references <affected function>
+mcp__gkg__get_references <affected function>
     → Who else calls this?
 
 Grep for related patterns
@@ -367,7 +367,7 @@ Save to `history/issues/<id>/impact.md`:
 
 ### Callers Affected
 
-- <List from gkg get_references>
+- <List from mcp__gkg__get_references>
 
 ### Related Code
 
@@ -514,14 +514,14 @@ Prevent infinite iteration:
 
 ### Tool Selection
 
-| Need                  | Tool                           |
-| --------------------- | ------------------------------ |
-| Parse stack trace     | Read + gkg get_definition      |
-| Find callers          | gkg get_references             |
-| Recent changes        | git log, git blame             |
-| Binary search commits | git bisect                     |
-| Reasoning about cause | oracle                         |
-| Validate fix approach | Spike via MULTI_AGENT_WORKFLOW |
+| Need                  | Tool                            |
+| --------------------- | ------------------------------- |
+| Parse stack trace     | Read + mcp**gkg**get_definition |
+| Find callers          | mcp**gkg**get_references        |
+| Recent changes        | git log, git blame              |
+| Binary search commits | git bisect                      |
+| Reasoning about cause | oracle                          |
+| Validate fix approach | Spike via MULTI_AGENT_WORKFLOW  |
 
 ### Common Mistakes
 

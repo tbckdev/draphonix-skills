@@ -399,16 +399,18 @@ bv --robot-plan 2>/dev/null | jq '.plan.unassigned'
 
 ### Tool Selection
 
-| Need               | Tool                                    |
-| ------------------ | --------------------------------------- |
-| Codebase structure | `mcp__gkg__repo_map`                    |
-| Find definitions   | `mcp__gkg__search_codebase_definitions` |
-| Find usages        | `mcp__gkg__get_references`              |
-| External patterns  | `librarian`                             |
-| Library docs       | `mcp__exa__get_code_context_exa`        |
-| Gap analysis       | `oracle`                                |
-| Create beads       | `skill("file-beads")` + `bd create`     |
-| Validate graph     | `bv --robot-*`                          |
+| Need               | Tool                                                                        |
+| ------------------ | --------------------------------------------------------------------------- |
+| Codebase structure | `mcp__gkg__repo_map`                                                        |
+| Find definitions   | `mcp__gkg__search_codebase_definitions`                                     |
+| Find usages        | `mcp__gkg__get_references`                                                  |
+| Semantic search    | `mcp__morph_mcp__warpgrep_codebase_search`                                  |
+| External patterns  | `librarian`                                                                 |
+| Library docs       | `mcp__MCP_DOCKER__resolve-library-id` → `mcp__MCP_DOCKER__get-library-docs` |
+| Web research       | `mcp__MCP_DOCKER__web_search_exa`                                           |
+| Gap analysis       | `oracle`                                                                    |
+| Create beads       | `skill("file-beads")` + `bd create`                                         |
+| Validate graph     | `bv --robot-*`                                                              |
 
 ### Common Mistakes
 
