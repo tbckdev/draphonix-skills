@@ -6,6 +6,7 @@ A collection of Claude Skills for multi-agent coordination, planning, and autono
 
 | Skill | Description |
 |-------|-------------|
+| **book-sft-pipeline** | Convert books into SFT datasets for training style-transfer models. Covers ePub extraction, segmentation, instruction generation, and LoRA training on Tinker. *Credit: [Muratcan Koylan](https://muratcankoylan.com/projects/gertrude-stein-style-training/)* |
 | **issue-resolution** | Systematically diagnose and fix bugs through triage, reproduction, root cause analysis, and verified fixes |
 | **knowledge** | Extracts knowledge from Amp threads and updates project documentation |
 | **orchestrator** | Plan and coordinate multi-agent bead execution with parallel workers |
@@ -25,6 +26,7 @@ A collection of Claude Skills for multi-agent coordination, planning, and autono
 #### Install Specific Skills
 
 ```bash
+/plugin install book-sft-pipeline@kuckit
 /plugin install issue-resolution@kuckit
 /plugin install planning@kuckit
 /plugin install orchestrator@kuckit
@@ -45,6 +47,7 @@ claude plugin add github:draphonix/skills
 amp skill add draphonix/skills
 
 # Install a specific skill
+amp skill add draphonix/skills/book-sft-pipeline
 amp skill add draphonix/skills/issue-resolution
 amp skill add draphonix/skills/planning
 amp skill add draphonix/skills/orchestrator
