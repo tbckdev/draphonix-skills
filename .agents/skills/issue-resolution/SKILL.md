@@ -347,7 +347,7 @@ Review test coverage
 If fix approach is uncertain:
 
 ```bash
-bd create "Spike: Validate fix approach for <issue>" -t task -p 0
+br create "Spike: Validate fix approach for <issue>" -t task -p 0
 ```
 
 Execute via MULTI_AGENT_WORKFLOW, write to `.spikes/<issue-id>/`.
@@ -396,7 +396,7 @@ Break fix into beads.
 ### Simple Fix (Single Bead)
 
 ```bash
-bd create "Fix: <issue title>" -t bug -p <priority>
+br create "Fix: <issue title>" -t bug -p <priority>
 ```
 
 Bead includes:
@@ -409,11 +409,11 @@ Bead includes:
 ### Complex Fix (Multiple Beads)
 
 ```bash
-bd create "Epic: Fix <issue>" -t epic -p <priority>
-bd create "Add regression test for <issue>" -t task --blocks <epic>
-bd create "Fix <component A>" -t bug --blocks <epic> --deps <test>
-bd create "Fix <component B>" -t bug --blocks <epic> --deps <test>
-bd create "Update docs for <behavior change>" -t task --blocks <epic> --deps <fix-a>,<fix-b>
+br create "Epic: Fix <issue>" -t epic -p <priority>
+br create "Add regression test for <issue>" -t task --blocks <epic>
+br create "Fix <component A>" -t bug --blocks <epic> --deps <test>
+br create "Fix <component B>" -t bug --blocks <epic> --deps <test>
+br create "Update docs for <behavior change>" -t task --blocks <epic> --deps <fix-a>,<fix-b>
 ```
 
 ### Fix Bead Template

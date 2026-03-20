@@ -220,10 +220,10 @@ Can we <specific, answerable technical question>?
 
 ```bash
 # If successful:
-bd close <id> --reason "YES: <working approach summary>"
+br close <id> --reason "YES: <working approach summary>"
 
 # If blocked:
-bd close <id> --reason "NO: <blocker>. Alternative: <suggestion>"
+br close <id> --reason "NO: <blocker>. Alternative: <suggestion>"
 ```
 ````
 
@@ -264,7 +264,7 @@ See `.spikes/<feature>/<spike-id>/` for working example.
 
 **Type**: task
 **Priority**: <0-4>
-**Depends on**: bd-X, bd-Y
+**Depends on**: br-X, br-Y
 
 ## Context
 
@@ -272,7 +272,7 @@ See `.spikes/<feature>/<spike-id>/` for working example.
 
 ## Learnings from Spikes
 
-> From spike bd-<id>:
+> From spike br-<id>:
 > - <Key learning 1>
 > - <Key learning 2>
 >

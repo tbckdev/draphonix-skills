@@ -175,20 +175,20 @@ Need to fix 3 files, all internal use cases
 ### Phase 4: Fix Decomposition
 
 ```bash
-bd create "Epic: Fix user lookup null handling" -t epic -p 0
-# → bd-100
+br create "Epic: Fix user lookup null handling" -t epic -p 0
+# → br-100
 
-bd create "Add regression tests for user lookup edge cases" -t task --blocks bd-100
-# → bd-101
+br create "Add regression tests for user lookup edge cases" -t task --blocks br-100
+# → br-101
 
-bd create "Fix null handling in get-user.ts" -t bug --blocks bd-100 --deps bd-101
-# → bd-102
+br create "Fix null handling in get-user.ts" -t bug --blocks br-100 --deps br-101
+# → br-102
 
-bd create "Fix null handling in update-user.ts" -t bug --blocks bd-100 --deps bd-101
-# → bd-103
+br create "Fix null handling in update-user.ts" -t bug --blocks br-100 --deps br-101
+# → br-103
 
-bd create "Fix null handling in delete-user.ts" -t bug --blocks bd-100 --deps bd-101
-# → bd-104
+br create "Fix null handling in delete-user.ts" -t bug --blocks br-100 --deps br-101
+# → br-104
 ```
 
 ---
@@ -311,7 +311,7 @@ gkg get_references validateUsername
 Single bead (simple fix):
 
 ```bash
-bd create "Fix: Allow unicode in username validation" -t bug -p 2
+br create "Fix: Allow unicode in username validation" -t bug -p 2
 ```
 
 **Fix**:
@@ -433,7 +433,7 @@ oracle(
 **Spike**: Test upsert approach
 
 ```bash
-bd create "Spike: Test upsert for order creation" -t task -p 0
+br create "Spike: Test upsert for order creation" -t task -p 0
 ```
 
 ---
@@ -441,7 +441,7 @@ bd create "Spike: Test upsert for order creation" -t task -p 0
 ### Phase 4: Fix Decomposition
 
 ```bash
-bd create "Fix: Prevent duplicate orders with upsert" -t bug -p 1
+br create "Fix: Prevent duplicate orders with upsert" -t bug -p 1
 ```
 
 **Fix**:

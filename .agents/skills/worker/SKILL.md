@@ -88,8 +88,8 @@ If conflict → report blocker (see `reference/message-templates.md`)
 #### 1.4 Claim Bead
 
 ```bash
-bd update <bead-id> --status in_progress
-bd show <bead-id>
+br update <bead-id> --status in_progress
+br show <bead-id>
 ```
 
 ---
@@ -195,7 +195,7 @@ bun run build
 #### 3.2 Close Bead
 
 ```bash
-bd close <bead-id> --reason "<concise summary>"
+br close <bead-id> --reason "<concise summary>"
 ```
 
 #### 3.3 Report to Orchestrator
@@ -250,9 +250,9 @@ Track N (<AgentName>) Complete:
 ### Bead Lifecycle Checklist
 
 ```
-START: summarize_thread → fetch_inbox → file_reservation_paths → bd update
+START: summarize_thread → fetch_inbox → file_reservation_paths → br update
 WORK:  gkg tools → morph edits → get_diagnostics → check inbox
-DONE:  verify → bd close → send_message (orchestrator) → send_message (self) → release
+DONE:  verify → br close → send_message (orchestrator) → send_message (self) → release
 NEXT:  loop to START
 ```
 

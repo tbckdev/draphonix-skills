@@ -110,17 +110,17 @@ oracle(
 **Create Spike Beads:**
 
 ```bash
-bd create "Spike: Billing Integration" -t epic -p 0
-# → bd-50
+br create "Spike: Billing Integration" -t epic -p 0
+# → br-50
 
-bd create "Spike: Test Stripe SDK import and typing" -t task --blocks bd-50
-# → bd-51
+br create "Spike: Test Stripe SDK import and typing" -t task --blocks br-50
+# → br-51
 
-bd create "Spike: Verify webhook signature handling" -t task --blocks bd-50
-# → bd-52
+br create "Spike: Verify webhook signature handling" -t task --blocks br-50
+# → br-52
 
-bd create "Spike: Checkout session creation flow" -t task --blocks bd-50
-# → bd-53
+br create "Spike: Checkout session creation flow" -t task --blocks br-50
+# → br-53
 ```
 
 **Execute via MULTI_AGENT_WORKFLOW:**
@@ -147,9 +147,9 @@ Workers execute, write to `.spikes/billing/`:
 **Close spikes with learnings:**
 
 ```bash
-bd close bd-51 --reason "YES: SDK imports cleanly. Use Stripe namespace for types."
-bd close bd-52 --reason "YES: Need raw body. Use stripe.webhooks.constructEvent()"
-bd close bd-53 --reason "YES: Create session server-side, redirect to session.url"
+br close br-51 --reason "YES: SDK imports cleanly. Use Stripe namespace for types."
+br close br-52 --reason "YES: Need raw body. Use stripe.webhooks.constructEvent()"
+br close br-53 --reason "YES: Create session server-side, redirect to session.url"
 ```
 
 ---
@@ -159,50 +159,50 @@ bd close bd-53 --reason "YES: Create session server-side, redirect to session.ur
 **Load file-beads skill and create main plan:**
 
 ```bash
-bd create "Epic: Billing Module" -t epic -p 1
-# → bd-60
+br create "Epic: Billing Module" -t epic -p 1
+# → br-60
 
 # Domain layer (no deps, can parallelize)
-bd create "Create Subscription entity and SubscriptionRepository port" -t task --blocks bd-60
-# → bd-61
+br create "Create Subscription entity and SubscriptionRepository port" -t task --blocks br-60
+# → br-61
 
-bd create "Create Plan entity" -t task --blocks bd-60
-# → bd-62
+br create "Create Plan entity" -t task --blocks br-60
+# → br-62
 
 # Infrastructure (depends on domain)
-bd create "Implement SubscriptionRepository with Drizzle" -t task --blocks bd-60 --deps bd-61
-# → bd-63
+br create "Implement SubscriptionRepository with Drizzle" -t task --blocks br-60 --deps br-61
+# → br-63
 
-bd create "Create Drizzle schema for subscriptions and plans" -t task --blocks bd-60 --deps bd-61,bd-62
-# → bd-64
+br create "Create Drizzle schema for subscriptions and plans" -t task --blocks br-60 --deps br-61,br-62
+# → br-64
 
 # Application layer
-bd create "Implement CreateSubscription use case" -t task --blocks bd-60 --deps bd-63
-# → bd-65
+br create "Implement CreateSubscription use case" -t task --blocks br-60 --deps br-63
+# → br-65
 
-bd create "Implement CancelSubscription use case" -t task --blocks bd-60 --deps bd-63
-# → bd-66
+br create "Implement CancelSubscription use case" -t task --blocks br-60 --deps br-63
+# → br-66
 
 # Stripe integration (HIGH risk - has spike learnings)
-bd create "Implement Stripe checkout session creation" -t task --blocks bd-60 --deps bd-65
-# → bd-67  ← Embed learnings from bd-53
+br create "Implement Stripe checkout session creation" -t task --blocks br-60 --deps br-65
+# → br-67  ← Embed learnings from br-53
 
-bd create "Implement Stripe webhook handler" -t task --blocks bd-60 --deps bd-63
-# → bd-68  ← Embed learnings from bd-52
+br create "Implement Stripe webhook handler" -t task --blocks br-60 --deps br-63
+# → br-68  ← Embed learnings from br-52
 
 # API layer
-bd create "Create billing oRPC router" -t task --blocks bd-60 --deps bd-65,bd-66,bd-67
-# → bd-69
+br create "Create billing oRPC router" -t task --blocks br-60 --deps br-65,br-66,br-67
+# → br-69
 
 # UI layer
-bd create "Create billing page with plan selection" -t task --blocks bd-60 --deps bd-69
-# → bd-70
+br create "Create billing page with plan selection" -t task --blocks br-60 --deps br-69
+# → br-70
 
-bd create "Implement checkout flow UI" -t task --blocks bd-60 --deps bd-69,bd-70
-# → bd-71
+br create "Implement checkout flow UI" -t task --blocks br-60 --deps br-69,br-70
+# → br-71
 ```
 
-**Example bead with embedded learnings (bd-68):**
+**Example bead with embedded learnings (br-68):**
 
 ```markdown
 # Implement Stripe webhook handler
@@ -211,7 +211,7 @@ bd create "Implement checkout flow UI" -t task --blocks bd-60 --deps bd-69,bd-70
 
 Handles Stripe webhook events for subscription lifecycle.
 
-## Learnings from Spike bd-52
+## Learnings from Spike br-52
 
 > - MUST use raw body (not parsed JSON) for signature verification
 > - Use `stripe.webhooks.constructEvent(rawBody, sig, secret)`
@@ -249,7 +249,7 @@ bv --robot-priority  # Validate priorities
 ```
 oracle(
   task: "Review billing plan for completeness",
-  files: [".beads/bd-60.md", ".beads/bd-61.md", ...]
+  files: [".beads/br-60.md", ".beads/br-61.md", ...]
 )
 ```
 
@@ -302,10 +302,10 @@ All MEDIUM or LOW → Proceed directly to decomposition.
 ### Phase 4: Decomposition
 
 ```bash
-bd create "Epic: User Avatar" -t epic -p 2
-bd create "Add avatarUrl field to User entity" -t task --blocks bd-80
-bd create "Add avatar upload endpoint with S3" -t task --blocks bd-80 --deps bd-81
-bd create "Add avatar display to profile UI" -t task --blocks bd-80 --deps bd-82
+br create "Epic: User Avatar" -t epic -p 2
+br create "Add avatarUrl field to User entity" -t task --blocks br-80
+br create "Add avatar upload endpoint with S3" -t task --blocks br-80 --deps br-81
+br create "Add avatar display to profile UI" -t task --blocks br-80 --deps br-82
 ```
 
 Small, low-risk feature → 3 beads, no spikes, linear dependency.

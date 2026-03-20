@@ -110,38 +110,38 @@ For each track, invoke:
 ### Example Task prompt for Track 1
 
 ```
-You are agent BlueLake working on Track 1 of epic bd-42.
+You are agent BlueLake working on Track 1 of epic br-42.
 
 ## Setup
 1. Read /path/to/project/AGENTS.md for tool preferences
 2. Load the worker skill: skill worker
 
 ## Your Track
-Beads to complete IN ORDER: bd-43, bd-44, bd-45
+Beads to complete IN ORDER: br-43, br-44, br-45
 File scope: packages/sdk/**
 
 ## Protocol for EACH bead:
 
 ### Start Bead
 1. mcp__mcp_agent_mail__register_agent with name="BlueLake", task_description="<bead-id>"
-2. mcp__mcp_agent_mail__summarize_thread with thread_id="track:BlueLake:bd-42"
+2. mcp__mcp_agent_mail__summarize_thread with thread_id="track:BlueLake:br-42"
 3. mcp__mcp_agent_mail__file_reservation_paths with paths=["packages/sdk/**"], reason="<bead-id>"
-4. Run: bd update <bead-id> --status in_progress
+4. Run: br update <bead-id> --status in_progress
 
 ### Work on Bead
 - Use preferred tools from AGENTS.md (gkg for exploration, morph for edits)
 - Check inbox periodically with mcp__mcp_agent_mail__fetch_inbox
 
 ### Complete Bead
-1. Run: bd close <bead-id> --reason "Summary of work"
+1. Run: br close <bead-id> --reason "Summary of work"
 2. mcp__mcp_agent_mail__send_message:
    - to: ["GoldFox"]
-   - thread_id: "bd-42"
+   - thread_id: "br-42"
    - subject: "[<bead-id>] COMPLETE"
    - body_md: "Done: <summary>. Next: <next-bead-id>"
 3. mcp__mcp_agent_mail__send_message (context for next bead):
    - to: ["BlueLake"]
-   - thread_id: "track:BlueLake:bd-42"
+   - thread_id: "track:BlueLake:br-42"
    - subject: "<bead-id> Complete - Context for next"
    - body_md: "## Learnings\n- ...\n## Gotchas\n- ..."
 4. mcp__mcp_agent_mail__release_file_reservations
@@ -153,7 +153,7 @@ File scope: packages/sdk/**
 ## When Track Complete
 mcp__mcp_agent_mail__send_message:
 - to: ["GoldFox"]
-- thread_id: "bd-42"
+- thread_id: "br-42"
 - subject: "[Track 1] COMPLETE"
 - body_md: "All beads done. Summary: ..."
 
@@ -268,7 +268,7 @@ bv --robot-triage --graph-root <epic-id> 2>/dev/null | jq '.quick_ref.open_count
 ### Close Epic
 
 ```bash
-bd close <epic-id> --reason "All tracks complete"
+br close <epic-id> --reason "All tracks complete"
 ```
 
 ---
@@ -282,7 +282,7 @@ bd close <epic-id> --reason "All tracks complete"
 | Spawn      | `Task` tool for each track (parallel)                                        |
 | Monitor    | `mcp__mcp_agent_mail__fetch_inbox`, `mcp__mcp_agent_mail__search_messages`   |
 | Resolve    | `mcp__mcp_agent_mail__reply_message` for blockers                            |
-| Complete   | Verify all done, send summary, `bd close`                                    |
+| Complete   | Verify all done, send summary, `br close`                                    |
 
 ---
 

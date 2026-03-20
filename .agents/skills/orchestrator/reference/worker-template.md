@@ -31,7 +31,7 @@ For EACH bead in your track:
    - mcp__mcp_agent_mail__register_agent (name="{AGENT_NAME}")
    - mcp__mcp_agent_mail__summarize_thread (thread_id="track:{AGENT_NAME}:{EPIC_ID}")
    - mcp__mcp_agent_mail__file_reservation_paths (paths=["{FILE_SCOPE}"], reason="{BEAD_ID}")
-   - bd update {BEAD_ID} --status in_progress
+   - br update {BEAD_ID} --status in_progress
 
 2. WORK
    - Implement the bead requirements
@@ -39,7 +39,7 @@ For EACH bead in your track:
    - Check inbox periodically
 
 3. COMPLETE BEAD
-   - bd close {BEAD_ID} --reason "..."
+   - br close {BEAD_ID} --reason "..."
    - mcp__mcp_agent_mail__send_message to orchestrator: "[{BEAD_ID}] COMPLETE"
    - mcp__mcp_agent_mail__send_message to self (track thread): context for next bead
    - mcp__mcp_agent_mail__release_file_reservations
@@ -64,8 +64,8 @@ For EACH bead in your track:
 | ---------------- | --------------------------------- | ---------------------- |
 | `{AGENT_NAME}`   | Worker's unique identity          | `BlueLake`             |
 | `{TRACK_NUMBER}` | Track number (1, 2, 3...)         | `1`                    |
-| `{EPIC_ID}`      | Epic bead ID                      | `bd-42`                |
-| `{BEAD_LIST}`    | Comma-separated bead IDs          | `bd-43, bd-44, bd-45`  |
+| `{EPIC_ID}`      | Epic bead ID                      | `br-42`                |
+| `{BEAD_LIST}`    | Comma-separated bead IDs          | `br-43, br-44, br-45`  |
 | `{FILE_SCOPE}`   | Glob pattern for file reservation | `packages/sdk/**`      |
 | `{PROJECT_PATH}` | Absolute path to project          | `/Users/dev/myproject` |
-| `{BEAD_ID}`      | Current bead being worked         | `bd-43`                |
+| `{BEAD_ID}`      | Current bead being worked         | `br-43`                |

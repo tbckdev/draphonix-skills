@@ -15,7 +15,7 @@ USER REQUEST → Worktree Setup → Discovery → Synthesis → Verification →
 
 | Phase             | Tool                                     | Output                              |
 | ----------------- | ---------------------------------------- | ----------------------------------- |
-| 0. Worktree Setup | bd worktree                              | Isolated feature branch             |
+| 0. Worktree Setup | br worktree                              | Isolated feature branch             |
 | 1. Discovery      | Parallel sub-agents, gkg, Librarian, exa | Discovery Report                    |
 | 2. Synthesis      | Oracle                                   | Approach + Risk Map                 |
 | 3. Verification   | Spikes via MULTI_AGENT_WORKFLOW          | Validated Approach + Learnings      |
@@ -31,7 +31,7 @@ USER REQUEST → Worktree Setup → Discovery → Synthesis → Verification →
 
 ```bash
 # From main repo root
-bd worktree create .worktrees/<feature-name> --branch feature/<feature-name>
+br worktree create .worktrees/<feature-name> --branch feature/<feature-name>
 cd .worktrees/<feature-name>
 ```
 
@@ -42,7 +42,7 @@ This creates a redirect file so all beads operations share the main repo's `.bea
 ```bash
 cd <main-repo>
 git pull
-bd worktree remove .worktrees/<feature-name>
+br worktree remove .worktrees/<feature-name>
 ```
 
 **Skip worktree only if**: Quick fix on main that won't create new beads.
@@ -164,9 +164,9 @@ Save to `history/<feature>/approach.md`:
 Spikes are mini-plans executed via MULTI_AGENT_WORKFLOW:
 
 ```bash
-bd create "Spike: <question to answer>" -t epic -p 0
-bd create "Spike: Test X" -t task --blocks <spike-epic>
-bd create "Spike: Verify Y" -t task --blocks <spike-epic>
+br create "Spike: <question to answer>" -t epic -p 0
+br create "Spike: Test X" -t task --blocks <spike-epic>
+br create "Spike: Verify Y" -t task --blocks <spike-epic>
 ```
 
 ### Spike Bead Template
@@ -189,7 +189,7 @@ Can we <specific technical question>?
 
 ## On Completion
 
-Close with: `bd close <id> --reason "YES: <approach>" or "NO: <blocker>"`
+Close with: `br close <id> --reason "YES: <approach>" or "NO: <blocker>"`
 ```
 
 ### Execute Spikes
@@ -199,7 +199,7 @@ Use the MULTI_AGENT_WORKFLOW:
 1. `bv --robot-plan` to parallelize spikes
 2. `Task()` per spike with time-box
 3. Workers write to `.spikes/<feature>/<spike-id>/`
-4. Close with learnings: `bd close <id> --reason "<result>"`
+4. Close with learnings: `br close <id> --reason "<result>"`
 
 ### Aggregate Spike Results
 
@@ -237,7 +237,7 @@ Each bead MUST include:
 
 ## Context
 
-Spike bd-12 validated: Stripe SDK works with our Node version.
+Spike br-12 validated: Stripe SDK works with our Node version.
 See `.spikes/billing-spike/webhook-test/` for working example.
 
 ## Learnings from Spike
@@ -266,9 +266,9 @@ bv --robot-priority  # Validate priorities
 ### Fix Issues
 
 ```bash
-bd dep add <from> <to>      # Add missing deps
-bd dep remove <from> <to>   # Break cycles
-bd update <id> --priority X # Adjust priorities
+br dep add <from> <to>      # Add missing deps
+br dep remove <from> <to>   # Break cycles
+br update <id> --priority X # Adjust priorities
 ```
 
 ### Oracle Final Review
@@ -297,7 +297,7 @@ For each track, determine the file scope based on beads in that track:
 
 ```bash
 # For each bead, check which files it touches
-bd show <bead-id>  # Look at description for file hints
+br show <bead-id>  # Look at description for file hints
 ```
 
 **Rules:**
@@ -327,9 +327,9 @@ Generated: <date>
 
 | Track | Agent       | Beads (in order)      | File Scope        |
 | ----- | ----------- | --------------------- | ----------------- |
-| 1     | BlueLake    | bd-10 → bd-11 → bd-12 | `packages/sdk/**` |
-| 2     | GreenCastle | bd-20 → bd-21         | `packages/cli/**` |
-| 3     | RedStone    | bd-30 → bd-31 → bd-32 | `apps/server/**`  |
+| 1     | BlueLake    | br-10 → br-11 → br-12 | `packages/sdk/**` |
+| 2     | GreenCastle | br-20 → br-21         | `packages/cli/**` |
+| 3     | RedStone    | br-30 → br-31 → br-32 | `apps/server/**`  |
 
 ## Track Details
 
@@ -338,30 +338,30 @@ Generated: <date>
 **File scope**: `packages/sdk/**`
 **Beads**:
 
-1. `bd-10`: <title> - <brief description>
-2. `bd-11`: <title> - <brief description>
-3. `bd-12`: <title> - <brief description>
+1. `br-10`: <title> - <brief description>
+2. `br-11`: <title> - <brief description>
+3. `br-12`: <title> - <brief description>
 
 ### Track 2: GreenCastle - <track-description>
 
 **File scope**: `packages/cli/**`
 **Beads**:
 
-1. `bd-20`: <title> - <brief description>
-2. `bd-21`: <title> - <brief description>
+1. `br-20`: <title> - <brief description>
+2. `br-21`: <title> - <brief description>
 
 ### Track 3: RedStone - <track-description>
 
 **File scope**: `apps/server/**`
 **Beads**:
 
-1. `bd-30`: <title> - <brief description>
-2. `bd-31`: <title> - <brief description>
-3. `bd-32`: <title> - <brief description>
+1. `br-30`: <title> - <brief description>
+2. `br-31`: <title> - <brief description>
+3. `br-32`: <title> - <brief description>
 
 ## Cross-Track Dependencies
 
-- Track 2 can start after bd-11 (Track 1) completes
+- Track 2 can start after br-11 (Track 1) completes
 - Track 3 has no cross-track dependencies
 
 ## Key Learnings (from Spikes)
@@ -409,7 +409,7 @@ bv --robot-plan 2>/dev/null | jq '.plan.unassigned'
 | Library docs       | `mcp__MCP_DOCKER__resolve-library-id` → `mcp__MCP_DOCKER__get-library-docs` |
 | Web research       | `mcp__MCP_DOCKER__web_search_exa`                                           |
 | Gap analysis       | `oracle`                                                                    |
-| Create beads       | `skill("file-beads")` + `bd create`                                         |
+| Create beads       | `skill("file-beads")` + `br create`                                         |
 | Validate graph     | `bv --robot-*`                                                              |
 
 ### Common Mistakes
