@@ -40,6 +40,7 @@ Independent utility skills not part of the khuym chain.
 | Skill | Description |
 |-------|-------------|
 | `book-sft-pipeline` | Convert books into SFT datasets for training style-transfer models |
+| `prompt-leverage` | Upgrade raw prompts into stronger execution-ready prompts |
 
 ## Skill Format
 

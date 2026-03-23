@@ -1,6 +1,6 @@
 {
   "name": "kuckit",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Khuym: multi-agent coordination skills for planning, validation, swarming, and execution",
   "skills": [
     { "name": "khuym:using-khuym", "path": "../khuym/khuym:using-khuym/SKILL.md" },
@@ -14,6 +14,7 @@
     { "name": "khuym:debugging", "path": "../khuym/khuym:debugging/SKILL.md" },
     { "name": "khuym:gkg", "path": "../khuym/khuym:gkg/SKILL.md" },
     { "name": "khuym:writing-khuym-skills", "path": "../khuym/khuym:writing-khuym-skills/SKILL.md" },
-    { "name": "book-sft-pipeline", "path": "../standalone/book-sft-pipeline/SKILL.md" }
+    { "name": "book-sft-pipeline", "path": "../standalone/book-sft-pipeline/SKILL.md" },
+    { "name": "prompt-leverage", "path": "../standalone/prompt-leverage/SKILL.md" }
   ]
 }
