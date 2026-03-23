@@ -1,0 +1,16 @@
+node_modules/
+coverage/
+tests
+scripts
+!standalone/**/scripts/
+!standalone/**/scripts/**
+package*
+tsconfig.json
+vitest.config.ts
+
+# bv (beads viewer) local config and caches
+.bv/
+.beads
+.khuym
+history
+docs

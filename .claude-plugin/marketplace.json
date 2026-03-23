@@ -5,43 +5,85 @@
     "url": "https://github.com/draphonix"
   },
   "metadata": {
-    "description": "Multi-agent coordination skills for planning, orchestration, and autonomous execution with Agent Mail"
+    "description": "Khuym: multi-agent coordination skills for agentic software development"
   },
   "plugins": [
     {
-      "name": "issue-resolution",
-      "description": "Systematically diagnose and fix bugs through triage, reproduction, root cause analysis, and verified fixes",
-      "source": "./skills/issue-resolution",
+      "name": "khuym:using-khuym",
+      "description": "Bootstrap meta-skill: routing, go mode, skill catalog, state bootstrap/resume",
+      "source": "./khuym/khuym:using-khuym",
       "strict": false
     },
     {
-      "name": "knowledge",
-      "description": "Extracts knowledge from Amp threads and updates project docs",
-      "source": "./skills/knowledge",
+      "name": "khuym:exploring",
+      "description": "Extract locked decisions via Socratic dialogue before planning begins",
+      "source": "./khuym/khuym:exploring",
       "strict": false
     },
     {
-      "name": "orchestrator",
-      "description": "Plan and coordinate multi-agent bead execution with parallel workers",
-      "source": "./skills/orchestrator",
+      "name": "khuym:planning",
+      "description": "Research codebase, synthesize approach, decompose into executable beads",
+      "source": "./khuym/khuym:planning",
       "strict": false
     },
     {
-      "name": "planning",
-      "description": "Generate comprehensive plans through discovery, synthesis, verification, and decomposition",
-      "source": "./skills/planning",
+      "name": "khuym:validating",
+      "description": "Plan verification (8 dimensions), spike execution for HIGH risk, bead polishing",
+      "source": "./khuym/khuym:validating",
+      "strict": false
+    },
+    {
+      "name": "khuym:swarming",
+      "description": "Launch and tend parallel worker agents via Agent Mail",
+      "source": "./khuym/khuym:swarming",
+      "strict": false
+    },
+    {
+      "name": "khuym:executing",
+      "description": "Per-agent worker loop: self-route from bead graph, implement, close, report",
+      "source": "./khuym/khuym:executing",
+      "strict": false
+    },
+    {
+      "name": "khuym:reviewing",
+      "description": "5 parallel review agents, 3-level artifact verification, UAT gate",
+      "source": "./khuym/khuym:reviewing",
+      "strict": false
+    },
+    {
+      "name": "khuym:compounding",
+      "description": "Capture learnings (patterns/decisions/failures) into history/learnings/",
+      "source": "./khuym/khuym:compounding",
+      "strict": false
+    },
+    {
+      "name": "khuym:debugging",
+      "description": "Systematic debugging for blocked workers, test failures, and build errors",
+      "source": "./khuym/khuym:debugging",
+      "strict": false
+    },
+    {
+      "name": "khuym:gkg",
+      "description": "Codebase intelligence via gkg tool for architecture and dependency analysis",
+      "source": "./khuym/khuym:gkg",
+      "strict": false
+    },
+    {
+      "name": "khuym:writing-khuym-skills",
+      "description": "TDD-for-skills meta-skill with pressure testing and persuasion psychology",
+      "source": "./khuym/khuym:writing-khuym-skills",
+      "strict": false
+    },
+    {
+      "name": "book-sft-pipeline",
+      "description": "Convert books into SFT datasets for training style-transfer models",
+      "source": "./standalone/book-sft-pipeline",
       "strict": false
     },
     {
       "name": "prompt-leverage",
-      "description": "Strengthen raw prompts into execution-ready instruction sets with clear structure and verification",
-      "source": "./skills/prompt-leverage",
-      "strict": false
-    },
-    {
-      "name": "worker",
-      "description": "Execute beads autonomously within a track with context persistence via Agent Mail",
-      "source": "./skills/worker",
+      "description": "Upgrade raw prompts into stronger execution-ready prompts",
+      "source": "./standalone/prompt-leverage",
       "strict": false
     }
   ]
