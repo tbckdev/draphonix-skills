@@ -2,6 +2,9 @@ node_modules/
 coverage/
 tests
 scripts
+!scripts/
+scripts/*
+!scripts/check-markdown-links.sh
 !standalone/**/scripts/
 !standalone/**/scripts/**
 package*

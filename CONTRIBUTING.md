@@ -6,7 +6,21 @@ This guide covers the skill format, directory conventions, and how Claude Code d
 
 Claude Code loads skills from `~/.claude/skills/*/SKILL.md`. Each skill's `description` field from the YAML frontmatter is injected into the system prompt. When a user's request matches a skill's trigger description, Claude invokes it via the `Skill` tool, which reads the full SKILL.md body as operational instructions.
 
-This repo also publishes a Claude Code plugin marketplace via [`.claude-plugin/marketplace.json`](/Users/themrb/Documents/personal/skills/.claude-plugin/marketplace.json), so skills can be installed through `claude plugin` instead of only through manual symlinks.
+This repo also publishes a Claude Code plugin marketplace via [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json), so skills can be installed through `claude plugin` instead of only through manual symlinks.
+
+## Documentation Checks
+
+Markdown links in this repo should stay repository-relative and environment-agnostic. Do not commit absolute local filesystem paths such as `/Users/...` in rendered docs.
+
+Run the docs link validator before merging documentation-heavy changes:
+
+```bash
+bash scripts/check-markdown-links.sh
+```
+
+This check fails when:
+- a Markdown link uses an absolute local path
+- a repository-relative Markdown link points to a missing target
 
 ## SKILL.md Structure
 
