@@ -72,6 +72,14 @@ The main differentiator is that execution is intentionally gated: the system doe
 3. `khuym:swarming` and `khuym:executing` implement the work in parallel with reservations and bead status updates.
 4. `khuym:reviewing` enforces quality gates, then `khuym:compounding` captures reusable learnings.
 
+## Where The Contract Lives
+
+The README is the top-level overview. The operational contract lives in the repo docs:
+
+- [`AGENTS.md`](AGENTS.md) defines the live Khuym chain, gates, bead workflow, and session rules.
+- [`docs/architecture/ARCHITECTURE.md`](docs/architecture/ARCHITECTURE.md) is the canonical architecture and vocabulary contract.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) covers skill format, marketplace packaging, and documentation checks.
+
 ## Install In Claude Code
 
 This repo ships a Claude Code plugin marketplace in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
@@ -94,13 +102,12 @@ bash scripts/sync-skills.sh --dry-run
 
 ## Skill Catalog
 
-### Khuym Ecosystem (`khuym/`)
+### Main Chain (`khuym/`)
 
-The Khuym ecosystem is the primary story in this repository: a coordinated chain built around beads (`br`), bead viewer (`bv`), and Agent Mail.
+These are the core delivery stages in the Khuym workflow:
 
 | Skill | Purpose |
 |-------|---------|
-| `khuym:using-khuym` | Bootstrap meta-skill — routing, go mode, state resume |
 | `khuym:exploring` | Socratic dialogue → locked decisions in CONTEXT.md |
 | `khuym:planning` | Research + synthesis → approach.md + beads |
 | `khuym:validating` | Plan verification (8 dims) + spikes + bead polishing — **THE GATE** |
@@ -108,10 +115,20 @@ The Khuym ecosystem is the primary story in this repository: a coordinated chain
 | `khuym:executing` | Per-agent worker loop: priority → reserve → implement → close |
 | `khuym:reviewing` | Specialist review passes + 3-level verification + UAT |
 | `khuym:compounding` | Capture learnings → history/learnings/ |
+
+### Bootstrap, Support, And Meta Skills (`khuym/`)
+
+These skills support the main chain without replacing it:
+
+| Skill | Purpose |
+|-------|---------|
+| `khuym:using-khuym` | Bootstrap meta-skill — routing, go mode, state resume |
 | `khuym:dream` | Manual dream consolidation pass over Codex artifacts and learnings (support) |
-| `khuym:writing-khuym-skills` | TDD-for-skills meta-skill |
 | `khuym:debugging` | Systematic debugging for blocked workers (support) |
 | `khuym:gkg` | Codebase intelligence via gkg tool (support) |
+| `khuym:writing-khuym-skills` | TDD-for-skills meta-skill |
+
+`khuym:dream` is intentionally outside the main execution chain. It runs on demand, consolidates durable lessons into `history/learnings/`, uses a bootstrap-first scan model with recurring bounded updates after provenance exists, and never edits `history/learnings/critical-patterns.md` without explicit approval.
 
 ### Standalone Skills (`standalone/`)
 
@@ -126,6 +143,14 @@ Standalone skills remain available, but they are intentionally secondary to the 
 
 - **Core tools:** `br` (beads CLI), `bv` (bead viewer), Agent Mail MCP server
 - **Optional:** `gkg` (codebase intelligence), CASS/CM (session search)
+
+## Documentation Checks
+
+When you change public docs in this repo, keep links repository-relative and run:
+
+```bash
+bash scripts/check-markdown-links.sh
+```
 
 ## License
 
