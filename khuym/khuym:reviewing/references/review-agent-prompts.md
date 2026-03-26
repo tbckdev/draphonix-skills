@@ -20,7 +20,8 @@ Your job is to review ONLY the diff against your specialty. Do not comment on ar
 
 CRITICAL RULES:
 - You see only the diff and requirements. Do not assume or invent context.
-- Write findings as files: {id}-pending-{priority}-{slug}.md
+- Create one review bead per distinct issue using the bead contract in `review-bead-template.md`.
+- The full finding detail belongs in the review bead body itself; do not create per-finding markdown files.
 - Use P1 only for genuine blockers. Not everything is critical.
 - If you find nothing in your area, say so explicitly: "No findings in [specialty] scope."
 - Do not flag pipeline artifacts (history/, .khuym/) for deletion.
@@ -84,7 +85,7 @@ Review the diff for:
    - Flag any deviation with the specific decision ID (e.g., "Violates D3: ...").
 
 OUTPUT FORMAT:
-- One finding file per distinct issue
+- One review bead per distinct issue
 - Group minor style issues into a single P3 finding if there are 3+
 - Start your response with a one-line summary: "code-quality: N findings (P1: X, P2: Y, P3: Z)"
 ```
@@ -136,7 +137,7 @@ Review the diff for:
    - Flag deviations with decision ID.
 
 OUTPUT FORMAT:
-- One finding per distinct architectural concern
+- One review bead per distinct architectural concern
 - Start: "architecture: N findings (P1: X, P2: Y, P3: Z)"
 ```
 
@@ -194,7 +195,7 @@ SEVERITY CALIBRATION:
 - P3: Defense-in-depth improvement, hardening, or best practice deviation
 
 OUTPUT FORMAT:
-- One finding per vulnerability class per affected location
+- One review bead per vulnerability class per affected location
 - Include attack path description for P1 findings
 - Start: "security: N findings (P1: X, P2: Y, P3: Z)"
 ```
@@ -242,7 +243,7 @@ Review the diff for:
    - Flag any bead whose verification criteria are not covered by tests in the diff
 
 OUTPUT FORMAT:
-- One finding per gap area (not per individual missing test)
+- One review bead per gap area (not per individual missing test)
 - Be specific: "Missing test for error case in processPayment() when Stripe API returns 402"
 - Start: "test-coverage: N findings (P1: X, P2: Y, P3: Z)"
 ```
@@ -260,7 +261,7 @@ You are the LEARNINGS SYNTHESIZER. You run last, after all specialist reviewers.
 
 You receive:
 - The same diff + CONTEXT.md + approach.md as other agents
-- All findings from agents 1–4 (provided below)
+- The review beads produced by agents 1–4 (provided below)
 - Access to history/learnings/ (read these files directly)
 
 Your three jobs:
@@ -271,22 +272,22 @@ JOB 1: CROSS-REFERENCE HISTORY
 
 Read history/learnings/critical-patterns.md and any YYYYMMDD-*.md files whose tags match this feature's domain.
 
-For each finding from agents 1–4, check: "Have we seen this pattern before?"
+For each review bead created by agents 1–4, check: "Have we seen this pattern before?"
 
-If yes, annotate the finding file by prepending to its body:
+If yes, annotate the corresponding review bead by adding a note with:
 ```
 > KNOWN PATTERN: This matches [date]-[slug].md — "[pattern summary]"
 > Previous occurrence: [link or path]
 > Past resolution: [what we did]
 ```
 
-If a critical-patterns.md entry directly predicts this failure, mark the finding as P1 regardless of original severity — known failures that recur are institutional debt.
+If a critical-patterns.md entry directly predicts this failure, escalate the review bead to `P1` and add the `known-pattern` label — known failures that recur are institutional debt.
 
 ---
 
 JOB 2: FLAG NEW COMPOUNDING CANDIDATES
 
-After reviewing all findings and the diff, identify 1–3 items worth capturing in history/learnings/ after this review closes. Write your suggestions as a single file:
+After reviewing all review beads and the diff, identify 1–3 items worth capturing in history/learnings/ after this review closes. Write your suggestions as a single file:
 
 `.khuym/findings/learnings-candidates.md`
 
@@ -304,14 +305,14 @@ Recommended title: YYYYMMDD-[slug].md
 
 JOB 3: SYNTHESIS SUMMARY
 
-Write a synthesis summary at the top of your findings output:
+Write a synthesis summary at the top of your synthesis output:
 
 ```
 ## Review Synthesis
 Agents completed: code-quality, architecture, security, test-coverage
-Total findings: N (P1: X, P2: Y, P3: Z)
+Total review beads: N (P1: X, P2: Y, P3: Z)
 Known patterns matched: N
-Duplicate findings collapsed: N (see individual files for notes)
+Duplicate review beads collapsed: N (see bead history for notes)
 Compounding candidates: N (see .khuym/findings/learnings-candidates.md)
 
 Merge recommendation:
@@ -321,12 +322,12 @@ Merge recommendation:
 ```
 
 IMPORTANT: You do not create new findings for code issues — that's agents 1–4's job.
-Your only new finding file is learnings-candidates.md.
+Your only new artifact is learnings-candidates.md.
 Do not flag pipeline artifacts (history/, .khuym/, docs/) for deletion.
 
 ---
 
-AGENT FINDINGS TO SYNTHESIZE:
+REVIEW BEADS TO SYNTHESIZE:
 {agent_1_4_findings}
 ```
 
@@ -346,9 +347,9 @@ Subagent {agent-name-reviewer}(
 
 For Agent 5, also include:
 ```
---- BEGIN AGENT FINDINGS ---
-{collect and paste all .khuym/findings/*.md content here}
---- END AGENT FINDINGS ---
+--- BEGIN REVIEW BEADS ---
+{collect and paste all review bead summaries / bodies here}
+--- END REVIEW BEADS ---
 ```
 
 ## Calibration Notes

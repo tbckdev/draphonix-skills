@@ -1,6 +1,6 @@
 ---
 name: khuym:reviewing
-description: Post-execution quality verification skill for the khuym ecosystem. Invoke after swarming completes. Runs 5 parallel specialist review agents, 3-level artifact verification, human UAT, and finishing (PR, cleanup, epic close). P1 findings always block merge. Absorbs finishing responsibilities — closes the epic and hands off to compounding.
+description: Post-execution quality verification skill for the khuym ecosystem. Invoke after swarming completes. Runs 5 parallel specialist review agents, 3-level artifact verification, human UAT, and finishing (PR, cleanup, epic close). Review issues become beads instead of per-finding markdown files; P1 still blocks merge while P2/P3 become non-blocking follow-up beads. Absorbs finishing responsibilities and hands off to compounding.
 metadata:
   version: '1.0'
   ecosystem: khuym
@@ -63,22 +63,33 @@ Do **not** pass session history, implementation notes, or agent communication lo
 
 See `references/review-agent-prompts.md` for the exact prompt for each agent.
 
-### Finding Files
+### Review Beads
 
-Each agent writes findings to `.khuym/findings/` using this naming convention:
+Each distinct review issue becomes a bead. Per-finding markdown files are no longer the primary review artifact.
+
+Use the bead contract from `references/review-bead-template.md`.
+
+**Creation rules:**
+
+- **P1** → create a blocking fix bead on the current review / epic-close path
+- **P2** → create a non-blocking follow-up bead
+- **P3** → create a non-blocking follow-up bead
+
+**Non-negotiable linkage rules:**
+
+- `P1` review beads may stay in the current epic-close path because they are blocking work
+- `P2` / `P3` review beads must **not** be children of the current epic
+- `P2` / `P3` traceability must use `external_ref=<source-epic-id>` plus labels such as `review`, `review-p2` / `review-p3`, and the source reviewer label
+
+**Title pattern:**
 
 ```
-{id}-pending-{p1|p2|p3}-{slug}.md
+Resolve Review P1: <problem title>
+Resolve Review P2: <problem title>
+Resolve Review P3: <problem title>
 ```
 
-Examples:
-```
-001-pending-p1-sql-injection-in-search.md
-002-pending-p2-missing-rate-limiting.md
-003-pending-p3-unused-import-cleanup.md
-```
-
-See `references/finding-template.md` for the required format.
+The full review write-up lives in the bead body itself: problem statement, evidence, proposed solutions, and acceptance criteria.
 
 ### Severity Rules
 
@@ -92,13 +103,15 @@ See `references/finding-template.md` for the required format.
 
 ### Synthesis (After All Agents Complete)
 
-1. Collect all finding files from `.khuym/findings/`
-2. Deduplicate overlapping issues (agent-native insight: mark as "duplicate of {id}")
-3. Surface `learnings-synthesizer` matches with known-pattern links
-4. Count: N P1, N P2, N P3
-5. Present summary table to user
+1. Collect the review beads created by agents 1-4
+2. Deduplicate overlapping issues
+   - prefer one surviving review bead per distinct problem
+   - close redundant duplicates with a reason such as `Duplicate of <bead-id>`
+3. Surface `learnings-synthesizer` matches with known-pattern notes on the relevant review bead
+4. Count: N P1, N P2, N P3 review beads
+5. Present a summary table to user with bead IDs by severity
 
-**If P1 findings exist:** HARD-GATE — stop and present. Do not proceed to Phase 2 until user acknowledges. Even in go mode, P1 is always human-gated.
+**If P1 review beads exist:** HARD-GATE — stop and present. Do not proceed to Phase 2 until user acknowledges. Even in go mode, P1 is always human-gated.
 
 ## Phase 2: 3-Level Artifact Verification
 
@@ -136,9 +149,9 @@ grep -r "PaymentForm" src/pages/ src/app/
 
 For each artifact:
 - ✅ L1+L2+L3: fully wired
-- ⚠️ L1+L2 only: created but not integrated — create P2 finding
-- 🛑 L1 only (stub): exists but empty — create P1 finding
-- 🛑 Missing: not found — create P1 finding
+- ⚠️ L1+L2 only: created but not integrated — create a `P2` review bead
+- 🛑 L1 only (stub): exists but empty — create a `P1` review bead
+- 🛑 Missing: not found — create a `P1` review bead
 
 ## Phase 3: Human UAT
 
@@ -180,7 +193,7 @@ You are the last step before compounding. Close the loop completely.
 
 [ ] Final build/test/lint passes
     → Run project's standard commands (npm test / pytest / cargo test / etc.)
-    → If fails: create P1 finding, fix before continuing
+    → If fails: create a `P1` review bead, fix before continuing
 
 [ ] Present merge options to user:
     1. Create PR (recommended)
@@ -205,13 +218,13 @@ You are the last step before compounding. Close the loop completely.
 ```bash
 gh pr create \
   --title "<feature title>" \
-  --body "## Summary\n<description>\n\n## Verified\n- [ ] All UAT items passed\n- [ ] No P1 findings\n- P2 findings: <list or 'none'>\n\n## Review Findings\nSee .khuym/findings/" \
+  --body "## Summary\n<description>\n\n## Verified\n- [ ] All UAT items passed\n- [ ] No P1 review beads remain open\n- P2 follow-up beads: <list or 'none'>\n- P3 follow-up beads: <list or 'none'>\n\n## Review Follow-up\n- Blocking review beads: <list or 'none'>\n- Non-blocking review beads: <list or 'none'>" \
   --draft  # remove if ready for immediate merge
 ```
 
-**If P2 findings exist:** Include them in PR body. Recommend fixing before merge, but user decides.
+**If P2 review beads exist:** Include them in the PR body. Recommend fixing before merge, but user decides.
 
-**If P3 findings exist:** Add to PR body under "Future Work." Do not block merge.
+**If P3 review beads exist:** Add them to the PR body under "Future Work." Do not block merge.
 
 ## Handoff
 
@@ -225,7 +238,7 @@ Update `.khuym/STATE.md`:
 STATUS: reviewing-complete
 EPIC: <id>
 HANDOFF: compounding
-FLAGGED_LEARNINGS: <count> (see .khuym/findings/ for learnings-synthesizer output)
+FLAGGED_LEARNINGS: <count> (see .khuym/findings/learnings-candidates.md)
 ```
 
 ## Red Flags
@@ -233,22 +246,25 @@ FLAGGED_LEARNINGS: <count> (see .khuym/findings/ for learnings-synthesizer outpu
 Stop and surface to user immediately if you see:
 
 - **P1 findings and no user acknowledgment** — never silently continue past P1
+- **P1 review beads created but gate not stopped** — invalid; P1 still blocks
 - **UAT failures marked as "pass"** — do not log a skip as a pass
 - **Artifact verification skipped** — Phase 2 is not optional; stubs ship to production this way
 - **Epic closed with open beads** — verify with `bv` before closing
 - **`learnings-synthesizer` flagging a known failure pattern** — this means the team already hit this problem. Surface explicitly: "Known pattern from [date]: [link]"
 - **Agent 5 running before agents 1–4 complete** — synthesis without findings is meaningless; enforce ordering
+- **P2/P3 review beads attached as children of the current epic** — this breaks the non-blocking contract; use `external_ref` + labels instead
 
 ## Files Written
 
 ```
 .khuym/findings/
-  {id}-pending-{p1|p2|p3}-{slug}.md   ← One per finding
+  learnings-candidates.md              ← Session-level compounding suggestions only
 history/<feature>/
-  STATE-final.md                        ← Archived state at close
+  STATE-final.md                       ← Archived state at close
 ```
 
 ## References
 
 - `references/review-agent-prompts.md` — Exact prompts for all 5 agents (load when dispatching)
-- `references/finding-template.md` — Finding file format with frontmatter spec
+- `references/review-bead-template.md` — Review bead format and creation contract
+- `references/finding-template.md` — Deprecation pointer for the retired file-based finding contract
