@@ -27,7 +27,7 @@ Every skill requires a `SKILL.md` file with YAML frontmatter and a markdown body
 
 ```yaml
 ---
-name: my-skill                      # kebab-case, matches folder name
+name: my-skill                      # public skill name shown to the agent
 description: >-                     # CRITICAL: this is the trigger text
   One paragraph explaining when to use this skill.
   Include concrete trigger phrases the user might say.
@@ -56,7 +56,7 @@ Behaviors to watch for and correct during execution.
 
 | Field | Purpose |
 |-------|---------|
-| `name` | kebab-case identifier, must match the folder name |
+| `name` | Public skill identifier used by the agent; may include a namespace prefix such as `khuym:` |
 | `description` | Trigger text for skill matching. Include use cases and trigger phrases |
 
 ## Optional Frontmatter Fields
@@ -133,6 +133,7 @@ Then add the repo marketplace from [`.agents/plugins/marketplace.json`](.agents/
    ```bash
    mkdir -p plugins/khuym/skills/my-skill/references
    ```
+   Use a filesystem-safe folder name. If the public skill name needs a namespace such as `khuym:planning`, keep that in the `name` field and use an unprefixed folder such as `planning/`.
 
 2. Write `SKILL.md` with frontmatter and body
 
