@@ -12,6 +12,7 @@ vitest.config.ts
 .bv/
 .beads
 .khuym
+.spike
 history
 docs
 .spikes
