@@ -29,9 +29,9 @@ Execution model:
 - Blockers and course corrections happen in this thread
 
 Workers spawning now:
-- <AGENT_NAME_1>
-- <AGENT_NAME_2>
-- <AGENT_NAME_3>
+- Codex: <CODEX_NICKNAME_1> / Agent Mail: pending
+- Codex: <CODEX_NICKNAME_2> / Agent Mail: pending
+- Codex: <CODEX_NICKNAME_3> / Agent Mail: pending
 
 All workers: join this thread, post startup acknowledgment, then load the khuym:executing skill.
 ```
@@ -45,15 +45,16 @@ All workers: join this thread, post startup acknowledgment, then load the khuym:
 **Purpose:** Confirms the worker is live and following the expected loop
 
 Runtime call:
-`send_message(project_key=..., sender_name="<AGENT_NAME>", to=["<COORDINATOR_AGENT_NAME>"], thread_id="<EPIC_ID>", topic="epic-<EPIC_ID>", ...)`
+`send_message(project_key=..., sender_name="<AGENT_MAIL_NAME>", to=["<COORDINATOR_AGENT_NAME>"], thread_id="<EPIC_ID>", topic="epic-<EPIC_ID>", ...)`
 
 ```
-Subject: [ONLINE] <AGENT_NAME> ready
+Subject: [ONLINE] <CODEX_NICKNAME> / <AGENT_MAIL_NAME> ready
 Thread: <EPIC_ID>
 Topic: epic-<EPIC_ID>
 Importance: NORMAL
 
-<AGENT_NAME> online.
+Codex nickname: <CODEX_NICKNAME>
+Agent Mail name: <AGENT_MAIL_NAME>
 Status: Loading khuym:executing skill.
 Next step: read context, run `bv --robot-priority`, claim the top executable bead.
 ```
@@ -67,7 +68,7 @@ Next step: read context, run `bv --robot-priority`, claim the top executable bea
 **Purpose:** Notifies orchestrator of progress
 
 Runtime call:
-`send_message(project_key=..., sender_name="<AGENT_NAME>", to=["<COORDINATOR_AGENT_NAME>"], thread_id="<EPIC_ID>", topic="epic-<EPIC_ID>", ...)`
+`send_message(project_key=..., sender_name="<AGENT_MAIL_NAME>", to=["<COORDINATOR_AGENT_NAME>"], thread_id="<EPIC_ID>", topic="epic-<EPIC_ID>", ...)`
 
 ```
 Subject: [DONE] <bead-id>: <bead-title>
@@ -77,7 +78,9 @@ Importance: NORMAL
 
 Bead closed: <bead-id>
 Title: <bead-title>
-Worker: <AGENT_NAME>
+Worker:
+- Codex nickname: <CODEX_NICKNAME>
+- Agent Mail name: <AGENT_MAIL_NAME>
 Commit: <git-commit-hash>
 
 Summary of changes:
@@ -103,7 +106,7 @@ Next action: return to `bv --robot-priority`
 **Purpose:** Requests orchestrator intervention
 
 Runtime call:
-`send_message(project_key=..., sender_name="<AGENT_NAME>", to=["<COORDINATOR_AGENT_NAME>"], thread_id="<EPIC_ID>", topic="epic-<EPIC_ID>", ...)`
+`send_message(project_key=..., sender_name="<AGENT_MAIL_NAME>", to=["<COORDINATOR_AGENT_NAME>"], thread_id="<EPIC_ID>", topic="epic-<EPIC_ID>", ...)`
 
 ```
 Subject: [BLOCKED] <bead-id> — <one-line description>
@@ -111,7 +114,10 @@ Thread: <EPIC_ID>
 Topic: epic-<EPIC_ID>
 Importance: HIGH
 
-BLOCKED: <AGENT_NAME> cannot proceed on bead <bead-id>.
+BLOCKED:
+- Codex nickname: <CODEX_NICKNAME>
+- Agent Mail name: <AGENT_MAIL_NAME>
+- Bead: <bead-id>
 
 Blocker type: [MISSING_CONTEXT | DEPENDENCY_NOT_MET | TECHNICAL_FAILURE | AMBIGUITY]
 
@@ -133,7 +139,7 @@ I am paused on this bead and waiting for a reply on this thread.
 **Purpose:** Coordinates file access without preassigned worker scopes
 
 Runtime call:
-`send_message(project_key=..., sender_name="<AGENT_NAME>", to=["<COORDINATOR_AGENT_NAME>"], thread_id="<EPIC_ID>", topic="epic-<EPIC_ID>", ...)`
+`send_message(project_key=..., sender_name="<AGENT_MAIL_NAME>", to=["<COORDINATOR_AGENT_NAME>"], thread_id="<EPIC_ID>", topic="epic-<EPIC_ID>", ...)`
 
 ```
 Subject: [FILE CONFLICT] <path/to/file>
@@ -141,7 +147,10 @@ Thread: <EPIC_ID>
 Topic: epic-<EPIC_ID>
 Importance: HIGH
 
-File conflict: <AGENT_NAME> needs a file that is currently reserved.
+File conflict:
+- Codex nickname: <CODEX_NICKNAME>
+- Agent Mail name: <AGENT_MAIL_NAME>
+- Needs a file that is currently reserved.
 
 Requested file: <path/to/file>
 Currently reserved by: <AGENT_NAME_holder or "unknown">
@@ -300,7 +309,8 @@ Write to `.khuym/HANDOFF.json` when the swarm coordinator context exceeds 65%:
   },
   "active_workers": [
     {
-      "agent_name": "<AGENT_NAME>",
+      "codex_nickname": "<CODEX_NICKNAME>",
+      "agent_mail_name": "<AGENT_MAIL_NAME>",
       "current_bead": "<bead-id-3>",
       "status": "in_progress"
     }
@@ -308,7 +318,10 @@ Write to `.khuym/HANDOFF.json` when the swarm coordinator context exceeds 65%:
   "open_blockers": [
     {
       "bead_id": "<bead-id>",
-      "worker": "<AGENT_NAME>",
+      "worker": {
+        "codex_nickname": "<CODEX_NICKNAME>",
+        "agent_mail_name": "<AGENT_MAIL_NAME>"
+      },
       "description": "<blocker description>",
       "thread_message_id": "<mail-id>"
     }

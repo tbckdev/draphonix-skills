@@ -115,15 +115,31 @@ Spawn a pool of worker subagents in parallel:
 
 ```
 Subagent(
-  identity="Worker: <agent-name>",
+  identity="Worker: <codex-subagent-name>",
   context=<scoped worker context from references/worker-template.md>
 )
 ```
 
 `Subagent(...)` is the canonical contract. In an actual runtime, call whatever worker-spawn primitive is available, but preserve the same behavior: the orchestrator stays in control, each worker gets bounded scope by default, and workers report back through Agent Mail plus the live bead graph.
 
+In Codex, worker bootstrap is a two-step runtime handshake:
+
+1. Call `spawn_agent(...)` for the worker.
+2. Capture the returned Codex nickname from the spawn result.
+3. Immediately send follow-up startup context to that worker with:
+   - `codex_subagent_name`
+   - `project_key`
+   - `epic_id`
+   - `epic_topic`
+   - `feature_name`
+   - `coordinator_agent_name`
+   - optional `startup_hint`
+4. Only after that follow-up arrives may the worker call `macro_start_session(...)`.
+
+Do not invent worker names locally. The parent runtime result is the source of truth for the Codex nickname.
+
 Provide each worker:
-- Agent Mail identity (project key, agent name, epic thread)
+- Codex subagent nickname plus the bootstrap context needed to resolve Agent Mail identity
 - Feature name / epic ID
 - Instruction to load the `khuym:executing` skill immediately
 - Optional startup hint if there is an urgent ready bead, clearly labeled as a hint rather than an assignment
@@ -137,7 +153,13 @@ Do **not** assign workers fixed tracks, fixed waves, or fixed bead lists as the 
 5. implement and report
 6. loop
 
-Mark spawned workers in `.khuym/STATE.md` under `## Active Workers`.
+Mark spawned workers in `.khuym/STATE.md` under `## Active Workers` immediately after each spawn result.
+
+Use one line per worker:
+
+`- Codex: <codex-subagent-name> | Agent Mail: pending | Status: spawned | Current bead: -`
+
+The worker startup acknowledgment will later replace `pending` with the resolved Agent Mail name returned by `macro_start_session(...)`.
 
 ---
 
@@ -169,15 +191,19 @@ bv --robot-triage --graph-root <EPIC_ID>
 
 When a worker posts an online message:
 1. Confirm it joined the correct epic thread
-2. Confirm it is loading `khuym:executing`
-3. Update `.khuym/STATE.md`
+2. Confirm it reports both the Codex nickname and resolved Agent Mail name
+3. Confirm it is loading `khuym:executing`
+4. Update the matching `.khuym/STATE.md` worker entry from:
+   `Codex: <nickname> | Agent Mail: pending | Status: spawned | Current bead: -`
+   to:
+   `Codex: <nickname> | Agent Mail: <resolved-name> | Status: online | Current bead: -`
 
 ### Bead Completion Reports
 
 When a worker posts a completion report:
 1. Verify the bead is actually closed: `br status <bead-id>`
 2. Acknowledge receipt on the thread
-3. Update `.khuym/STATE.md`
+3. Update `.khuym/STATE.md` using the existing worker entry keyed by Codex nickname
 4. Re-check the graph if needed to see what newly unblocked
 
 ### Blocker Alerts
@@ -188,7 +214,7 @@ When a worker posts a blocker alert:
    - **Needs another worker's status or release:** coordinate via thread
    - **Needs human judgment:** escalate to user quickly
 2. Do not let workers spin silently on blockers
-3. Record blocker state in `.khuym/STATE.md`
+3. Record blocker state in `.khuym/STATE.md` on the same worker entry that tracks both names
 
 ### File Conflict Requests
 
@@ -198,7 +224,7 @@ When a worker requests a file another worker holds:
    - holder releases at a safe checkpoint
    - requester waits
    - requester defers and creates a follow-up bead
-3. Log the resolution in `.khuym/STATE.md`
+3. Log the resolution in `.khuym/STATE.md` using the existing two-name worker entries
 
 ### Overseer Broadcasts
 

@@ -31,15 +31,25 @@ Run once at session start.
 
 ### 1a. Register with Agent Mail
 
+Swarming gives you a Codex nickname first. Use that nickname as the attempted Agent Mail name, then keep the returned Agent Mail name for all later mail operations.
+
 ```
-macro_start_session(
+startup = macro_start_session(
   human_key: "<project-root-path>",
   model: "gpt-5",
   program: "codex-cli",
   task_description: "khuym worker execution",
-  agent_name: "<agent-id>"          # provided by swarming (e.g., "worker-blue-lake")
+  agent_name: "<codex-subagent-name>"
 )
+
+resolved_agent_mail_name = startup.agent.name
 ```
+
+Record both identities in your startup acknowledgment:
+- `Codex nickname: <codex-subagent-name>`
+- `Agent Mail name: <resolved-agent-mail-name>`
+
+From this point on, use `resolved_agent_mail_name` for every Agent Mail call.
 
 ### 1b. Read Project Context (in this order)
 
@@ -99,7 +109,7 @@ Reserve every file this bead will modify before touching a single line of code.
 ```
 file_reservation_paths(
   project_key: "<project-root-path>",
-  agent_name: "<agent-id>",
+  agent_name: "<resolved-agent-mail-name>",
   paths: ["src/foo.ts", "src/bar.ts"],
   reason: "Working bead <bead-id>"
 )
@@ -110,7 +120,7 @@ file_reservation_paths(
 ```
 send_message(
   project_key: "<project-root-path>",
-  sender_name: "<agent-id>",
+  sender_name: "<resolved-agent-mail-name>",
   to: ["<COORDINATOR_AGENT_NAME>"],
   thread_id: "<EPIC_ID>",
   topic: "<EPIC_TOPIC>",
@@ -181,7 +191,7 @@ npm run lint
 ```
 send_message(
   project_key: "<project-root-path>",
-  sender_name: "<agent-id>",
+  sender_name: "<resolved-agent-mail-name>",
   to: ["<COORDINATOR_AGENT_NAME>"],
   thread_id: "<EPIC_ID>",
   topic: "<EPIC_TOPIC>",
@@ -219,7 +229,7 @@ Do not batch multiple beads into one commit. Do not commit unrelated changes.
 
 ```
 release_file_reservations(
-  agent_name: "<agent-id>",
+  agent_name: "<resolved-agent-mail-name>",
   paths: ["src/foo.ts", "src/bar.ts"]
 )
 ```
@@ -231,12 +241,12 @@ Release **before** sending the completion report so other agents can acquire the
 ```
 send_message(
   project_key: "<project-root-path>",
-  sender_name: "<agent-id>",
+  sender_name: "<resolved-agent-mail-name>",
   to: ["<COORDINATOR_AGENT_NAME>"],
   thread_id: "<EPIC_ID>",
   topic: "<EPIC_TOPIC>",
   subject: "Completed <bead-id>",
-  body_md: "Implemented: [summary]. Files: [list]. Verification: [tests passed / build clean]. Commit: [hash]."
+  body_md: "Codex nickname: <codex-subagent-name>. Agent Mail name: <resolved-agent-mail-name>. Implemented: [summary]. Files: [list]. Verification: [tests passed / build clean]. Commit: [hash]."
 )
 ```
 
@@ -261,7 +271,8 @@ Save to `.khuym/HANDOFF.json`:
 {
   "schema_version": "1.0",
   "session": {
-    "agent": "<agent-id>",
+    "codex_nickname": "<codex-subagent-name>",
+    "agent_mail_name": "<resolved-agent-mail-name>",
     "paused_at": "<ISO timestamp>",
     "reason_for_pause": "context_critical"
   },
@@ -287,12 +298,12 @@ Then notify the orchestrator:
 ```
 send_message(
   project_key: "<project-root-path>",
-  sender_name: "<agent-id>",
+  sender_name: "<resolved-agent-mail-name>",
   to: ["<COORDINATOR_AGENT_NAME>"],
   thread_id: "<EPIC_ID>",
   topic: "<EPIC_TOPIC>",
-  subject: "Context handoff from <agent-id>",
-  body_md: "Context at ~67%. Completed N beads. HANDOFF.json written. Safe to resume by checking mail and running bv --robot-priority."
+  subject: "Context handoff from <codex-subagent-name> / <resolved-agent-mail-name>",
+  body_md: "Codex nickname: <codex-subagent-name>. Agent Mail name: <resolved-agent-mail-name>. Context at ~67%. Completed N beads. HANDOFF.json written. Safe to resume by checking mail and running bv --robot-priority."
 )
 ```
 
@@ -352,11 +363,13 @@ Stop and reassess if you notice any of these:
 
 When spawned, swarming provides (via Agent Mail message or task prompt):
 
-- `agent_name` — your identity (e.g., `worker-blue-lake`)
+- `codex_subagent_name` — your runtime nickname from the parent spawn result (e.g., `Peirce`)
 - `coordinator_agent_name` — swarm coordinator identity (e.g., `GreenCastle`)
 - `epic_thread_id` — the Agent Mail thread for this feature (normally the epic bead ID)
 - `epic_topic` — shared swarm topic tag (recommended: `epic-<EPIC_ID>`)
 - `startup_hint` — optional: a bead or area the orchestrator wants checked first
 - `feature_name` — used to locate `history/<feature>/CONTEXT.md`
 
-If any of these are missing, query Agent Mail for the swarm coordination message before proceeding.
+You resolve `resolved_agent_mail_name` yourself during `macro_start_session(...)`.
+
+If any of the startup inputs are missing, query Agent Mail for the swarm coordination message before proceeding.

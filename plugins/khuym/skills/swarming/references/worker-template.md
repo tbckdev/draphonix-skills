@@ -8,7 +8,7 @@ Use this template when spawning a worker subagent. Fill in the placeholders from
 
 ```
 Subagent(
-  identity="Worker: <AGENT_NAME>",
+  identity="Worker: <CODEX_SUBAGENT_NAME>",
   context="""
 <WORKER_PROMPT>
 """
@@ -25,7 +25,8 @@ Subagent(
 You are a worker subagent in the khuym swarm.
 
 ## Your Identity
-- Agent name: <AGENT_NAME>
+- Codex nickname: <CODEX_SUBAGENT_NAME>
+- Agent Mail name: resolve on startup via `macro_start_session(...)`
 - Epic ID: <EPIC_ID>
 - Feature: <FEATURE_NAME>
 
@@ -33,13 +34,15 @@ You are a worker subagent in the khuym swarm.
 1. Project key: <PROJECT_KEY>
 2. On startup, call:
    ```
-   macro_start_session(
+   startup = macro_start_session(
      human_key="<PROJECT_KEY>",
      model="gpt-5",
      program="codex-cli",
      task_description="khuym worker execution",
-     agent_name="<AGENT_NAME>"
+     agent_name="<CODEX_SUBAGENT_NAME>"
    )
+
+   RESOLVED_AGENT_MAIL_NAME = startup.agent.name
    ```
 3. Set a shared topic tag for this epic:
    ```
@@ -49,10 +52,10 @@ You are a worker subagent in the khuym swarm.
    ```
    send_message(
      project_key="<PROJECT_KEY>",
-     sender_name="<AGENT_NAME>",
+     sender_name=RESOLVED_AGENT_MAIL_NAME,
      to=["<COORDINATOR_AGENT_NAME>"],
-     subject="[ONLINE] <AGENT_NAME> ready",
-     body_md="<AGENT_NAME> online. Loading khuym:executing.",
+     subject="[ONLINE] <CODEX_SUBAGENT_NAME> / " + RESOLVED_AGENT_MAIL_NAME + " ready",
+     body_md="Codex nickname: <CODEX_SUBAGENT_NAME>\nAgent Mail name: " + RESOLVED_AGENT_MAIL_NAME + "\nStatus: Loading khuym:executing.",
      thread_id="<EPIC_ID>",
      topic="<EPIC_TOPIC>"
    )
@@ -61,10 +64,11 @@ You are a worker subagent in the khuym swarm.
    ```
    fetch_inbox(
      project_key="<PROJECT_KEY>",
-     agent_name="<AGENT_NAME>",
+     agent_name=RESOLVED_AGENT_MAIL_NAME,
      topic="<EPIC_TOPIC>"
    )
    ```
+6. Treat `RESOLVED_AGENT_MAIL_NAME` as authoritative for all later Agent Mail calls.
 
 ## Context Boundary
 You are a bounded worker subagent. Use the task-specific context you were given first, and only request broader parent context if the current bead genuinely needs it.
@@ -90,7 +94,7 @@ It is not a fixed assignment. The live bead graph and Agent Mail state still win
 </STARTUP_HINT>
 
 ## Reporting Requirements
-- Post a **Worker Spawn Acknowledgment** to thread `<EPIC_ID>` after startup
+- Post a **Worker Spawn Acknowledgment** to thread `<EPIC_ID>` after startup. Include both the Codex nickname and the resolved Agent Mail name.
 - Post a **Completion Report** after each bead closes
 - Post a **Blocker Alert** immediately if blocked
 - Post a **File Conflict Request** if a needed file is reserved by another worker
@@ -112,7 +116,7 @@ After each bead completion, assess your context budget. If context is high, fini
 
 | Placeholder | Source |
 |---|---|
-| `<AGENT_NAME>` | Orchestrator-generated worker identity |
+| `<CODEX_SUBAGENT_NAME>` | Nickname returned by the runtime `spawn_agent(...)` result |
 | `<EPIC_ID>` | Epic bead ID / coordination thread ID |
 | `<FEATURE_NAME>` | Current feature slug or display name |
 | `<PROJECT_KEY>` | Absolute path to project root |
@@ -128,16 +132,18 @@ After each bead completion, assess your context budget. If context is high, fini
 You are a worker subagent in the khuym swarm.
 
 ## Your Identity
-- Agent name: Worker-BlueLake
+- Codex nickname: Peirce
+- Agent Mail name: resolve on startup via `macro_start_session(...)`
 - Epic ID: br-epic-001
 - Feature: auth-refresh
 
 ## Agent Mail Setup
 1. Project key: /home/user/projects/myapp
 2. On startup:
-   macro_start_session(human_key="/home/user/projects/myapp", model="gpt-5", program="codex-cli", task_description="khuym worker execution", agent_name="Worker-BlueLake")
+   startup = macro_start_session(human_key="/home/user/projects/myapp", model="gpt-5", program="codex-cli", task_description="khuym worker execution", agent_name="Peirce")
+   RESOLVED_AGENT_MAIL_NAME = startup.agent.name  # e.g. "CrimsonDog"
 3. Set topic: epic-br-epic-001
-4. Post startup acknowledgment with send_message(..., to=["GreenCastle"], thread_id="br-epic-001", topic="epic-br-epic-001")
+4. Post startup acknowledgment with send_message(..., sender_name=RESOLVED_AGENT_MAIL_NAME, to=["GreenCastle"], thread_id="br-epic-001", topic="epic-br-epic-001")
 
 ## Skill To Load
 Load the `khuym:executing` skill immediately.
