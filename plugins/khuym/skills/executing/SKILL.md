@@ -54,8 +54,10 @@ From this point on, use `resolved_agent_mail_name` for every Agent Mail call.
 ### 1b. Read Project Context (in this order)
 
 1. **AGENTS.md** — project operating manual (mandatory; skip nothing)
-2. **.khuym/STATE.md** — current project focus, decisions, active blockers
-3. **history/\<feature\>/CONTEXT.md** — locked decisions that MUST be honored
+2. If present, run **`node .codex/khuym_status.mjs --json`** — quick onboarding/state/handoff scout
+3. **.khuym/state.json** — machine-readable routing snapshot
+4. **.khuym/STATE.md** — current project focus, decisions, active blockers
+5. **history/\<feature\>/CONTEXT.md** — locked decisions that MUST be honored
 
 If any of these files does not exist, note the absence and proceed — do not fabricate content.
 

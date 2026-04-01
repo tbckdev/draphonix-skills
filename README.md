@@ -4,6 +4,51 @@ Khuym is a Codex plugin repo that packages a validate-first workflow for agentic
 
 Khuym is built for teams that want to turn ambiguous requests into reviewed, production-ready changes without skipping planning or quality gates.
 
+## What A Khuym Run Looks Like
+
+Ask for a feature like:
+
+> "Add inbound email support for the agent inbox."
+
+Khuym is designed to move that request through a repeatable chain:
+
+1. `khuym:exploring` locks the missing decisions into `CONTEXT.md`.
+2. `khuym:planning` turns those decisions into a phase plan, a current-phase contract, a story map, and beads.
+3. `khuym:validating` checks that the current phase is sound before any implementation starts.
+4. `khuym:swarming` and `khuym:executing` implement the current phase with reservations and live graph coordination.
+5. `khuym:reviewing` verifies the work and records P1/P2/P3 findings.
+6. `khuym:compounding` captures durable learnings for future work.
+
+The point is not ceremony for its own sake. The point is to make expensive misunderstandings and avoidable rework much less likely.
+
+## When To Use Khuym
+
+Use Khuym when:
+
+- the request is ambiguous or under-specified
+- the work spans multiple files, systems, or agents
+- the cost of getting the plan wrong is meaningful
+- you want a reviewed and auditable path from request to shipped work
+
+Do not reach for the full chain when:
+
+- the task is a one-line fix with no ambiguity
+- the work is obviously local and low-risk
+- you do not need beads, coordination, or formal review gates
+
+## Working Modes
+
+Khuym keeps one core workflow but presents it in three user-facing modes:
+
+- `small_change` — lightweight planning and validating for bounded low-risk work
+- `standard_feature` — the default full Khuym workflow
+- `high_risk_feature` — the full workflow plus deeper planning scrutiny and stronger spike discipline
+
+The core contract does not change across modes:
+- `CONTEXT.md` is still the source of truth
+- `validating` still gates execution
+- beads + `bv` + Agent Mail still drive coordination
+
 ## Current Situation
 
 Khuym is not a greenfield framework. It sits downstream of several strong agentic-development systems and distills the parts that fit this repo owner's actual workflow.
@@ -60,6 +105,16 @@ khuym:exploring → khuym:planning → khuym:validating → khuym:swarming → k
 ```
 
 The main differentiator is that execution is intentionally gated: the system does not proceed from planning into implementation until the phase has a clear exit state, coherent stories, and validated beads.
+
+## Session Scout
+
+On onboarded repos, Khuym installs a read-only scout command:
+
+```bash
+node .codex/khuym_status.mjs --json
+```
+
+It summarizes onboarding health plus `.khuym/state.json`, `.khuym/STATE.md`, and `.khuym/HANDOFF.json` so humans and agents can orient quickly before opening deeper artifacts.
 
 ## Human Gates
 
@@ -173,6 +228,14 @@ Standalone skills remain available, but they are intentionally secondary to the 
 ## Documentation Checks
 
 When you change public docs in this repo, keep links repository-relative and environment-agnostic.
+
+Recommended verification set:
+
+```bash
+bash scripts/check-markdown-links.sh
+bash scripts/sync-skills.sh --dry-run
+claude plugin validate .
+```
 
 ## License
 

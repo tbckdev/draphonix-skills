@@ -29,6 +29,12 @@ This repo treats these as errors:
 - a Markdown link uses an absolute local path
 - a repository-relative Markdown link points to a missing target
 
+Run:
+
+```bash
+bash scripts/check-markdown-links.sh
+```
+
 ## SKILL.md Structure
 
 Every skill requires a `SKILL.md` file with YAML frontmatter and a markdown body:
@@ -161,12 +167,20 @@ Codex plugins are not installed directly from a GitHub URL. The standard flow is
 4. Verify Codex discovers and invokes the skill
 5. Check that the operational instructions produce the expected behavior
 
+For repo-level verification, also run:
+
+```bash
+bash scripts/sync-skills.sh --dry-run
+claude plugin validate .
+```
+
 ## Khuym-Specific Conventions
 
 Khuym ecosystem skills follow additional conventions:
 
 - **Chain position:** Each skill hands off to the next in the chain (exploring → planning → validating → ...)
 - **HARD-GATE blocks:** Non-negotiable behavioral constraints wrapped in `<HARD-GATE>` tags
-- **State updates:** Skills update `.khuym/STATE.md` at phase transitions
+- **State updates:** Skills update `.khuym/STATE.md` and `.khuym/state.json` at phase transitions
+- **Scout-first startup:** On onboarded repos, skills should prefer `node .codex/khuym_status.mjs --json` as the first quick orientation step before opening deeper state files
 - **Red Flags section:** Every skill lists behaviors that should trigger immediate correction
 - **Handoff message:** Every skill ends with an explicit handoff stating which skill to invoke next

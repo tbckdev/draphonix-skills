@@ -122,6 +122,8 @@ Handoff: "Invoke khuym:validating skill for Phase <n>."
 
 ## Before You Start
 
+If `.codex/khuym_status.mjs` exists, run `node .codex/khuym_status.mjs --json` first so you start from the latest onboarding/state/handoff snapshot instead of inferring it from memory.
+
 **Read CONTEXT.md first.** It is the single source of truth. Every research decision, every phase, every story, and every bead must honor the locked decisions inside it.
 
 ```bash

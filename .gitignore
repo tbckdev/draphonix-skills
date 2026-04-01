@@ -16,6 +16,12 @@ vitest.config.ts
 history
 !docs/
 docs/*
+!docs/architecture/
+docs/architecture/*
+!docs/architecture/ARCHITECTURE.md
+!docs/examples/
+docs/examples/*
+!docs/examples/golden-path.md
 !docs/legal/
 !docs/legal/privacy.md
 !docs/legal/terms.md

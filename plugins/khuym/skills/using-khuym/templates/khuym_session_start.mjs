@@ -38,7 +38,9 @@ export async function main() {
 
   const notes = [];
   if (fs.existsSync(onboardingPath)) {
-    notes.push("Khuym onboarding is installed for this repo. Read AGENTS.md before substantive work.");
+    notes.push(
+      "Khuym onboarding is installed for this repo. Read AGENTS.md, then run node .codex/khuym_status.mjs --json for a quick scout before substantive work.",
+    );
   } else {
     notes.push("Khuym onboarding is missing in this repo. Load khuym:using-khuym before continuing.");
   }

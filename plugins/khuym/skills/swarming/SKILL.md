@@ -57,12 +57,13 @@ Prerequisites:
 - Current-phase beads are in `open` status and approved for execution
 - EPIC_ID is known (from STATE.md or user input)
 - Agent Mail server is reachable
+- If `.codex/khuym_status.mjs` exists, run `node .codex/khuym_status.mjs --json` first to confirm onboarding, current phase, and any saved handoff before launching the swarm
 
 ---
 
 ## Phase 1: Confirm Swarm Readiness
 
-1. Get `EPIC_ID`: read `.khuym/STATE.md` or ask the user.
+1. Get `EPIC_ID`: prefer `.khuym/state.json`, then `.khuym/STATE.md`, then ask the user.
 2. Check live bead status:
    ```bash
    bv --robot-triage --graph-root <EPIC_ID>
@@ -71,7 +72,7 @@ Prerequisites:
    - open beads exist
    - dependencies are acyclic
    - no unresolved validation blockers remain
-4. Update `.khuym/STATE.md` with current swarm intent and epic ID.
+4. Update `.khuym/state.json` and `.khuym/STATE.md` with current swarm intent and epic ID.
 
 **Do not** compute runtime tracks, runtime waves, or any separate runtime planning artifact. In the corrected model, the bead graph itself is the execution source of truth.
 

@@ -1,8 +1,8 @@
 ---
 name: khuym:using-khuym
-description: Bootstrap meta-skill for the khuym agentic development ecosystem. Load first on any khuym project. Lists all 9+2 skills with routing logic, go mode (full-auto pipeline with 4 human gates), quick mode for small fixes, priority rules, red flags, and state bootstrap/resume. Invoke when starting a new session, choosing which skill to use, running the full pipeline end-to-end, or resuming after a handoff.
+description: Bootstrap meta-skill for the khuym agentic development ecosystem. Load first on any khuym project. Lists all 9+2 skills with routing logic, session scout/bootstrap, small-change vs standard-feature vs high-risk mode selection, go mode (full-auto pipeline with 4 human gates), priority rules, and state resume. Invoke when starting a new session, choosing which skill to use, running the full pipeline end-to-end, or resuming after a handoff.
 metadata:
-  version: '2.1'
+  version: '2.2'
   ecosystem: khuym
 ---
 
@@ -37,9 +37,32 @@ Onboarding installs or updates:
 - repo-local `.codex/config.toml`
 - repo-local `.codex/hooks.json`
 - repo-local `.codex/hooks/khuym_*.mjs`
+- repo-local `.codex/khuym_status.mjs`
+- repo-local `.codex/khuym_state.mjs`
 - `.khuym/onboarding.json`
+- `.khuym/state.json`
 
 If onboarding is not complete, do not continue into the rest of the Khuym workflow.
+
+---
+
+## Session Scout
+
+After onboarding succeeds, use the repo-local scout command as the first quick orientation step whenever it is available:
+
+```bash
+node .codex/khuym_status.mjs --json
+```
+
+The scout is read-only. It summarizes:
+
+- onboarding health
+- `.khuym/state.json`
+- `.khuym/STATE.md`
+- `.khuym/HANDOFF.json`
+- recommended next reads/actions
+
+Use it to get the current truth quickly, then open the deeper files it points to.
 
 ---
 
@@ -63,13 +86,25 @@ If onboarding is not complete, do not continue into the rest of the Khuym workfl
 
 ## Routing Logic
 
+Given a user request, determine the working mode first, then the first skill.
+
+### Mode selection
+
+| Mode | Use when... | Notes |
+|---|---|---|
+| `small_change` | ≤3 files, no new API/data model, LOW risk, no gray areas | Lightweight planning and validating, but still no skipping validating |
+| `standard_feature` | Normal feature or refactor with clear value but moderate scope | Default mode for most Khuym work |
+| `high_risk_feature` | Cross-cutting, high-blast-radius, or architecture-sensitive work | Use deeper planning review and explicit spikes for risky items |
+
+### First-skill routing
+
 Given a user request, determine which skill to invoke first:
 
 | Request type | First skill | Notes |
 |---|---|---|
 | Vague/new feature ("build X") | `khuym:exploring` | Always start here if gray areas exist |
 | Research task ("investigate Y") | `khuym:planning` | Skip exploring only if scope is fully clear |
-| "Just fix this" / small change | `khuym:planning` (lightweight) | Single bead; skip exploring |
+| "Just fix this" / small change | `khuym:planning` | Route in `small_change` mode |
 | "Review my code" | `khuym:reviewing` | Load directly |
 | "What did we learn?" / "Capture learnings" | `khuym:compounding` | Load directly |
 | "Improve khuym itself" | `khuym:writing-khuym-skills` | Load directly |
@@ -89,24 +124,40 @@ On every session start, before doing anything else:
 0. Confirm Khuym onboarding is current via .khuym/onboarding.json
    → If missing or stale: return to Plugin Onboarding above
 
+0.5. If .codex/khuym_status.mjs exists: run `node .codex/khuym_status.mjs --json`
+   → Use the scout output to decide which files to open next
+
 1. Check for .khuym/ directory in project root
    → If missing: mkdir -p .khuym/ and create defaults below
    
-2. Check .khuym/STATE.md
+2. Check .khuym/state.json
+   → If missing: create with defaults:
+     {
+       "schema_version": "1.0",
+       "phase": "idle",
+       "approved_gates": {
+         "context": false,
+         "phase_plan": false,
+         "execution": false,
+         "review": false
+       }
+     }
+
+3. Check .khuym/STATE.md
    → If missing: create with template:
      # STATE
      focus: (none)
      phase: idle
      last_updated: <date>
    
-3. Check .khuym/HANDOFF.json
+4. Check .khuym/HANDOFF.json
    → If exists → go to Resume Logic below
    → If missing → proceed normally
    
-4. Check .khuym/config.json
+5. Check .khuym/config.json
    → If missing: create {} (all features enabled by default — absent=enabled)
 
-5. Check for history/learnings/critical-patterns.md
+6. Check for history/learnings/critical-patterns.md
    → If exists: read it now. These are mandatory context for all subsequent skills.
 ```
 
@@ -117,7 +168,7 @@ On every session start, before doing anything else:
 If `.khuym/HANDOFF.json` exists:
 
 ```
-1. Read HANDOFF.json
+1. Read HANDOFF.json (and .khuym/state.json if present)
 2. Extract: { phase, skill, feature, context_pct, next_action, beads_in_flight }
 3. Present to user:
    "Session paused at [phase] during [feature].
@@ -173,9 +224,11 @@ exploring → [GATE 1] → planning (whole feature) → [GATE 2]
 
 ---
 
-## Quick Mode (Small Fixes)
+## Mode Guidance
 
-For requests classified as "small fix" (single bead, LOW risk, no gray areas):
+### `small_change`
+
+For requests classified as `small_change`:
 
 ```
 planning (lightweight: single bead, no multi-model refinement)
@@ -183,16 +236,34 @@ planning (lightweight: single bead, no multi-model refinement)
   → validating (lightweight: single-story phase, abbreviated verification + bv check)
   → swarming (single worker)
   → executing
-  → reviewing (optional: skip if trivial)
+  → reviewing (lightweight but still required)
   → compounding (only if a lesson was learned)
 ```
 
-Classify as quick mode when ALL of these are true:
+Choose `small_change` when ALL of these are true:
 - Change touches ≤3 files
 - No new API surface or data model changes
 - Risk is clearly LOW
 - No gray areas about intent
 - The phase can honestly be expressed as one story
+
+### `standard_feature`
+
+Use this for the default Khuym chain. This is the normal case for most feature work:
+
+```
+exploring → planning → validating → swarming → executing → reviewing → compounding
+```
+
+### `high_risk_feature`
+
+Use this when the work is cross-cutting, hard to reverse, or likely to fail if assumptions are wrong.
+
+Additional expectations:
+- more discovery depth during planning
+- explicit second-opinion refinement during planning
+- spike discipline for risky items during validating
+- slower approval at GATE 3 before execution begins
 
 ---
 
@@ -286,11 +357,12 @@ Watch for these violations. Pause and surface them immediately when detected:
 **Quality violations:**
 - P1 finding present but pipeline continues to merge
 - `br close` called on a bead with placeholder/stub implementation
-- Review skipped because "it's a small change"
+- Review skipped outside the approved lightweight `small_change` flow
 
 **State violations:**
 - Context >65% but no HANDOFF.json written
 - Session resumed without reading HANDOFF.json
+- `state.json` missing or stale after a phase transition
 - STATE.md not updated after a phase transition
 
 ---
@@ -300,9 +372,14 @@ Watch for these violations. Pause and surface them immediately when detected:
 ```
 .khuym/
   onboarding.json   ← Khuym plugin onboarding status + managed asset versions
+  state.json        ← Machine-readable routing snapshot used by agents and tools
   STATE.md          ← Current phase, focus, blockers (update at every phase transition)
   config.json       ← Feature toggles (absent=enabled)
   HANDOFF.json      ← Session resume data (write when pausing)
+
+.codex/
+  khuym_status.mjs  ← Read-only scout command for onboarding, state, and handoff
+  khuym_state.mjs   ← Shared state helpers used by the scout command
 
 history/<feature>/
   CONTEXT.md        ← Locked decisions from exploring (source of truth)
@@ -332,7 +409,7 @@ Each skill reads from upstream artifacts and writes for downstream:
 | exploring | (user conversation) | history/\<feature>/CONTEXT.md |
 | planning | CONTEXT.md, critical-patterns.md | discovery.md, approach.md, phase-plan.md, current-phase contract/story map, current-phase beads |
 | validating | phase-plan.md, current-phase contract/story map, current-phase beads, approach.md, CONTEXT.md | validated current phase, .spikes/ results |
-| swarming | validated beads, STATE.md | Agent Mail threads, HANDOFF.json, updated STATE.md |
+| swarming | validated beads, state.json, STATE.md | Agent Mail threads, HANDOFF.json, updated state.json, updated STATE.md |
 | executing | bead file, Agent Mail, CONTEXT.md | implementation commits, br close |
 | reviewing | diff, CONTEXT.md, approach.md, beads | P1/P2/P3 findings |
 | compounding | review findings, full feature history | history/learnings/YYYYMMDD-\<slug>.md, critical-patterns.md |

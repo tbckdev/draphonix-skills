@@ -5,8 +5,16 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+import {
+  buildDefaultState,
+  normalizeKhuymState,
+  readKhuymState,
+  writeKhuymState,
+} from "./khuym_state.mjs";
+
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const USING_KHUYM_DIR = path.dirname(path.dirname(SCRIPT_PATH));
+const USING_KHUYM_SCRIPTS_DIR = path.dirname(SCRIPT_PATH);
 const PLUGIN_ROOT = path.dirname(path.dirname(USING_KHUYM_DIR));
 const PLUGIN_MANIFEST_PATH = path.join(PLUGIN_ROOT, ".codex-plugin", "plugin.json");
 const AGENTS_TEMPLATE_PATH = path.join(PLUGIN_ROOT, "AGENTS.template.md");
@@ -25,6 +33,10 @@ const LEGACY_HOOK_FILENAMES = [
   "khuym_pre_tool_use.py",
   "khuym_stop.py",
 ];
+const MANAGED_SUPPORT_FILES = {
+  "khuym_status.mjs": path.join(HOOK_TEMPLATES_DIR, "khuym_status.mjs"),
+  "khuym_state.mjs": path.join(USING_KHUYM_SCRIPTS_DIR, "khuym_state.mjs"),
+};
 
 export function getNodeRuntimeStatus(version = process.versions.node) {
   const major = Number.parseInt(String(version).split(".")[0] || "0", 10);
@@ -205,10 +217,11 @@ function renderCompactPromptBlock() {
     "",
     "STOP. Before doing anything else:",
     "1. Read AGENTS.md completely.",
-    "2. If present, read .khuym/HANDOFF.json and .khuym/STATE.md.",
-    "3. Re-open the active feature CONTEXT.md before more planning or edits.",
-    "4. Re-open the current bead or task before running more implementation commands.",
-    "5. Check the current worktree state with git status before resuming.",
+    "2. If present, run node .codex/khuym_status.mjs --json.",
+    "3. If present, read .khuym/HANDOFF.json, .khuym/state.json, and .khuym/STATE.md.",
+    "4. Re-open the active feature CONTEXT.md before more planning or edits.",
+    "5. Re-open the current bead or task before running more implementation commands.",
+    "6. Check the current worktree state with git status before resuming.",
     "",
     "After completing these steps, briefly confirm what context you restored and only then continue.",
     '"""',
@@ -409,6 +422,20 @@ function hookScriptsNeedUpdate(repoRoot) {
   return false;
 }
 
+function supportScriptsNeedUpdate(repoRoot) {
+  const codexDir = path.join(repoRoot, ".codex");
+
+  for (const [name, sourcePath] of Object.entries(MANAGED_SUPPORT_FILES)) {
+    const targetPath = path.join(codexDir, name);
+    const source = fs.readFileSync(sourcePath, "utf8");
+    if (!fs.existsSync(targetPath) || fs.readFileSync(targetPath, "utf8") !== source) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function writeHookScripts(repoRoot) {
   const hooksDir = path.join(repoRoot, ".codex", "hooks");
   fs.mkdirSync(hooksDir, { recursive: true });
@@ -429,6 +456,28 @@ function writeHookScripts(repoRoot) {
     written.push(path.relative(repoRoot, target));
   }
   return written;
+}
+
+function writeSupportScripts(repoRoot) {
+  const codexDir = path.join(repoRoot, ".codex");
+  fs.mkdirSync(codexDir, { recursive: true });
+
+  const written = [];
+  for (const [name, sourcePath] of Object.entries(MANAGED_SUPPORT_FILES)) {
+    const target = path.join(codexDir, name);
+    fs.copyFileSync(sourcePath, target);
+    fs.chmodSync(target, 0o755);
+    written.push(path.relative(repoRoot, target));
+  }
+  return written;
+}
+
+function needsStateUpdate(repoRoot) {
+  const statePath = path.join(repoRoot, ".khuym", "state.json");
+  const existing = normalizeKhuymState(readKhuymState(repoRoot));
+  const sourceText = fs.existsSync(statePath) ? fs.readFileSync(statePath, "utf8") : "";
+  const normalizedText = `${JSON.stringify(existing, null, 2)}\n`;
+  return sourceText !== normalizedText;
 }
 
 function buildRuntimeBlockedPayload(repoRoot, action) {
@@ -521,6 +570,14 @@ export function checkRepo(repoRoot) {
     actions.push("sync_khuym_hook_scripts");
   }
 
+  if (supportScriptsNeedUpdate(repoRoot)) {
+    actions.push("sync_khuym_support_scripts");
+  }
+
+  if (needsStateUpdate(repoRoot)) {
+    actions.push("write_.khuym/state.json");
+  }
+
   if (onboarding.plugin_version !== pluginVersion) {
     actions.push("write_.khuym/onboarding.json");
   }
@@ -556,11 +613,13 @@ export function applyRepo(repoRoot, allowCompactPromptReplace) {
   const configPath = path.join(repoRoot, ".codex", "config.toml");
   const hooksPath = path.join(repoRoot, ".codex", "hooks.json");
   const onboardingPath = path.join(repoRoot, ".khuym", "onboarding.json");
+  const statePath = path.join(repoRoot, ".khuym", "state.json");
 
   ensureParent(agentsPath);
   ensureParent(configPath);
   ensureParent(hooksPath);
   ensureParent(onboardingPath);
+  ensureParent(statePath);
 
   const mergedAgents = mergeAgentsContent(readTextIfExists(agentsPath), template);
   fs.writeFileSync(agentsPath, mergedAgents.text, "utf8");
@@ -572,6 +631,11 @@ export function applyRepo(repoRoot, allowCompactPromptReplace) {
   fs.writeFileSync(hooksPath, hooksResult.text, "utf8");
 
   const hookScripts = writeHookScripts(repoRoot);
+  const supportScripts = writeSupportScripts(repoRoot);
+  const statePayload = fs.existsSync(statePath)
+    ? normalizeKhuymState(readKhuymState(repoRoot))
+    : buildDefaultState();
+  writeKhuymState(repoRoot, statePayload);
 
   const onboardingNotes = [];
   let status = "complete";
@@ -593,6 +657,8 @@ export function applyRepo(repoRoot, allowCompactPromptReplace) {
       config_changes: configResult.changes,
       hook_changes: hooksResult.changes,
       hook_scripts: hookScripts,
+      support_scripts: supportScripts,
+      state_file: path.relative(repoRoot, statePath),
     },
     notes: onboardingNotes,
   };

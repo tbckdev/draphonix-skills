@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 
 import { applyRepo, checkRepo, getNodeRuntimeStatus } from "./onboard_khuym.mjs";
 
@@ -22,10 +23,17 @@ test("applyRepo creates full repo onboarding with node-based hooks", () => {
     assert.ok(fs.existsSync(path.join(root, ".codex", "config.toml")));
     assert.ok(fs.existsSync(path.join(root, ".codex", "hooks.json")));
     assert.ok(fs.existsSync(path.join(root, ".khuym", "onboarding.json")));
+    assert.ok(fs.existsSync(path.join(root, ".khuym", "state.json")));
     assert.ok(fs.existsSync(path.join(root, ".codex", "hooks", "khuym_session_start.mjs")));
+    assert.ok(fs.existsSync(path.join(root, ".codex", "khuym_status.mjs")));
+    assert.ok(fs.existsSync(path.join(root, ".codex", "khuym_state.mjs")));
     assert.match(
       fs.readFileSync(path.join(root, ".codex", "hooks.json"), "utf8"),
       /node \.codex\/hooks\/khuym_session_start\.mjs/,
+    );
+    assert.equal(
+      JSON.parse(fs.readFileSync(path.join(root, ".khuym", "state.json"), "utf8")).phase,
+      "idle",
     );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
@@ -106,6 +114,27 @@ test("checkRepo flags stale python hook commands and legacy hook files", () => {
     assert.equal(result.status, "needs_onboarding");
     assert.ok(result.actions.includes("install_khuym_hook_entries"));
     assert.ok(result.actions.includes("sync_khuym_hook_scripts"));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("installed khuym_status script reports onboarding and state", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-onboard-"));
+
+  try {
+    applyRepo(root, false);
+
+    const stdout = execFileSync("node", [path.join(root, ".codex", "khuym_status.mjs"), "--json"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    const status = JSON.parse(stdout);
+
+    assert.equal(status.onboarding.exists, true);
+    assert.equal(status.state_json.exists, true);
+    assert.equal(status.state_json.phase, "idle");
+    assert.ok(status.next_reads.includes("AGENTS.md"));
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
