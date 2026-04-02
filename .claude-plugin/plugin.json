@@ -1,6 +1,6 @@
 {
   "name": "khuym",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Khuym: validate-first multi-agent skills for phase contracts, stories, swarming, and execution",
   "skills": [
     { "name": "khuym:using-khuym", "path": "../plugins/khuym/skills/using-khuym/SKILL.md" },
@@ -16,6 +16,8 @@
     { "name": "khuym:gkg", "path": "../plugins/khuym/skills/gkg/SKILL.md" },
     { "name": "khuym:writing-khuym-skills", "path": "../plugins/khuym/skills/writing-khuym-skills/SKILL.md" },
     { "name": "book-sft-pipeline", "path": "../plugins/khuym/skills/book-sft-pipeline/SKILL.md" },
-    { "name": "prompt-leverage", "path": "../plugins/khuym/skills/prompt-leverage/SKILL.md" }
+    { "name": "bootstrap-project-context", "path": "../plugins/khuym/skills/bootstrap-project-context/SKILL.md" },
+    { "name": "prompt-leverage", "path": "../plugins/khuym/skills/prompt-leverage/SKILL.md" },
+    { "name": "refresh-project-docs", "path": "../plugins/khuym/skills/refresh-project-docs/SKILL.md" }
   ]
 }

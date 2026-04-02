@@ -218,7 +218,9 @@ Standalone skills remain available, but they are intentionally secondary to the 
 | Skill | Description |
 |-------|-------------|
 | `book-sft-pipeline` | Convert books into SFT datasets for training style-transfer models |
+| `bootstrap-project-context` | Bootstrap a new session by reading repo docs and mapping the codebase |
 | `prompt-leverage` | Upgrade raw prompts into stronger execution-ready prompts |
+| `refresh-project-docs` | Refresh README and docs so they match the current repo state |
 
 ## Requirements
 
