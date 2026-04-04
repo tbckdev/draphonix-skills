@@ -136,7 +136,59 @@ test("installed khuym_status script reports onboarding and state", () => {
     assert.equal(status.onboarding.exists, true);
     assert.equal(status.state_json.exists, true);
     assert.equal(status.state_json.phase, "idle");
+    assert.ok(status.dependency_health);
+    assert.ok(typeof status.dependency_health.summary.missing_dependencies === "number");
     assert.ok(status.next_reads.includes("AGENTS.md"));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("installed khuym_status text distinguishes missing commands from missing MCP config", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-onboard-"));
+
+  try {
+    applyRepo(root, false);
+    const skillsRoot = path.join(root, "plugins", "khuym", "skills");
+    const alphaDir = path.join(skillsRoot, "alpha");
+    fs.mkdirSync(alphaDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(alphaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:alpha",
+        "metadata:",
+        "  dependencies:",
+        "    - id: missing-cli",
+        "      kind: command",
+        "      command: definitely-missing-command",
+        "      missing_effect: unavailable",
+        "      reason: required for test",
+        "    - id: missing-server",
+        "      kind: mcp_server",
+        "      server_names: [definitely_missing_mcp_server_name]",
+        "      config_sources: [repo_codex_config, global_codex_config]",
+        "      missing_effect: degraded",
+        "      reason: required for test",
+        "---",
+        "",
+        "# alpha",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const stdout = execFileSync("node", [path.join(root, ".codex", "khuym_status.mjs")], {
+      cwd: root,
+      encoding: "utf8",
+    });
+
+    assert.match(stdout, /Dependency health:/);
+    assert.match(stdout, /Missing commands:/);
+    assert.match(stdout, /definitely-missing-command/);
+    assert.match(stdout, /Missing MCP server configuration:/);
+    assert.match(stdout, /definitely_missing_mcp_server_name/);
+    assert.match(stdout, /Affects: khuym:alpha/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

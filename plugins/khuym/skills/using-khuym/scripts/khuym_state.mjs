@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { buildKhuymDependencyReport } from "./khuym_dependencies.mjs";
 
 export const STATE_SCHEMA_VERSION = "1.0";
 
@@ -98,6 +99,28 @@ function normalizeApprovedGates(value) {
     execution: Boolean(gates.execution),
     review: Boolean(gates.review),
   };
+}
+
+function readDependencyHealth(repoRoot) {
+  try {
+    return buildKhuymDependencyReport({ repoRoot });
+  } catch (error) {
+    return {
+      checked_at: utcNow(),
+      summary: {
+        skills_total: 0,
+        skills_available: 0,
+        skills_degraded: 0,
+        skills_unavailable: 0,
+        declared_dependencies: 0,
+        missing_dependencies: 0,
+      },
+      skills: [],
+      missing_dependencies: [],
+      mcp_sources: [],
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 export function buildDefaultState(overrides = {}) {
@@ -246,6 +269,7 @@ export function readKhuymStatus(repoRoot) {
   const handoff = readJsonIfExists(paths.handoff);
   const stateMarkdownText = fileTextIfExists(paths.stateMarkdown);
   const stateMarkdown = parseLooseKeyValueMarkdown(stateMarkdownText);
+  const dependencyHealth = readDependencyHealth(repoRoot);
 
   const status = {
     repo_root: repoRoot,
@@ -275,6 +299,7 @@ export function readKhuymStatus(repoRoot) {
             ? handoff.context_pct
             : "",
     },
+    dependency_health: dependencyHealth,
     critical_patterns_exists: fs.existsSync(paths.criticalPatterns),
     next_reads: [],
     recommended_actions: [],
@@ -284,6 +309,76 @@ export function readKhuymStatus(repoRoot) {
   status.recommended_actions = buildRecommendedActions(status);
 
   return status;
+}
+
+function formatDependencyTarget(target) {
+  if (Array.isArray(target)) {
+    return target.filter(Boolean).join(", ");
+  }
+  return String(target || "");
+}
+
+function formatDependencyImpact(missingDependency) {
+  const requiredBy = Array.isArray(missingDependency.required_by)
+    ? missingDependency.required_by.join(", ")
+    : "(unknown skills)";
+  const effects = Array.isArray(missingDependency.missing_effects)
+    ? missingDependency.missing_effects.join(", ")
+    : "degraded";
+  return `Affects: ${requiredBy}. Reported status impact: ${effects}.`;
+}
+
+function renderDependencyHealthLines(status) {
+  const dependencyHealth =
+    status.dependency_health && typeof status.dependency_health === "object"
+      ? status.dependency_health
+      : null;
+  const summary = dependencyHealth?.summary || {};
+  const missingDependencies = Array.isArray(dependencyHealth?.missing_dependencies)
+    ? dependencyHealth.missing_dependencies
+    : [];
+
+  const lines = [
+    "Dependency health:",
+    `- Skills: ${summary.skills_total || 0} total (${summary.skills_available || 0} available, ${summary.skills_degraded || 0} degraded, ${summary.skills_unavailable || 0} unavailable)`,
+    `- Declared dependencies: ${summary.declared_dependencies || 0}`,
+    `- Missing declared dependencies: ${summary.missing_dependencies || 0}`,
+  ];
+
+  if (missingDependencies.length === 0) {
+    lines.push("- Missing commands: none");
+    lines.push("- Missing MCP server configuration: none");
+    return lines;
+  }
+
+  const missingCommands = missingDependencies.filter((dependency) => dependency.kind === "command");
+  const missingMcpServers = missingDependencies.filter(
+    (dependency) => dependency.kind === "mcp_server",
+  );
+
+  lines.push("- Missing commands:");
+  if (missingCommands.length === 0) {
+    lines.push("  - none");
+  } else {
+    for (const dependency of missingCommands) {
+      lines.push(
+        `  - ${formatDependencyTarget(dependency.target)}. ${formatDependencyImpact(dependency)}`,
+      );
+    }
+  }
+
+  lines.push("- Missing MCP server configuration:");
+  if (missingMcpServers.length === 0) {
+    lines.push("  - none");
+  } else {
+    for (const dependency of missingMcpServers) {
+      lines.push(
+        `  - ${formatDependencyTarget(dependency.target)}. ${formatDependencyImpact(dependency)}`,
+      );
+    }
+  }
+
+  return lines;
 }
 
 export function renderKhuymStatus(status) {
@@ -307,6 +402,8 @@ export function renderKhuymStatus(status) {
     `Phase: ${phase}`,
     `Epic: ${epicId}`,
     `Handoff: ${handoff}`,
+    "",
+    ...renderDependencyHealthLines(status),
     "",
     "Next reads:",
     ...status.next_reads.map((item) => `- ${item}`),
