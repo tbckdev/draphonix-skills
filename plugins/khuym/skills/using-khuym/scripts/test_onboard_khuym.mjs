@@ -5,10 +5,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 
 import { applyRepo, checkRepo, getNodeRuntimeStatus } from "./onboard_khuym.mjs";
 import { buildKhuymDependencyReport } from "./khuym_dependencies.mjs";
+
+const LOCAL_ONBOARD_SCRIPT_PATH = fileURLToPath(new URL("./onboard_khuym.mjs", import.meta.url));
 
 test("applyRepo creates full repo onboarding with node-based hooks", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-onboard-"));
@@ -205,6 +208,119 @@ test("checkRepo reports dependency health summary without blocking onboarding st
     assert.ok(payload.details.dependency_health);
     assert.ok(typeof payload.details.dependency_health.summary.skills_total === "number");
     assert.ok(Array.isArray(payload.details.dependency_health.skills));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("checkRepo promotes missing dependency data into an operator-facing warning summary", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-onboard-"));
+
+  try {
+    applyRepo(root, false);
+    const skillsRoot = path.join(root, "plugins", "khuym", "skills");
+    const alphaDir = path.join(skillsRoot, "alpha");
+    fs.mkdirSync(alphaDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(alphaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:alpha",
+        "metadata:",
+        "  dependencies:",
+        "    - id: missing-cli",
+        "      kind: command",
+        "      command: definitely-missing-command",
+        "      missing_effect: unavailable",
+        "      reason: required for test",
+        "    - id: missing-server",
+        "      kind: mcp_server",
+        "      server_names: [definitely_missing_mcp_server_name]",
+        "      config_sources: [repo_codex_config, global_codex_config]",
+        "      missing_effect: degraded",
+        "      reason: required for test",
+        "---",
+        "",
+        "# alpha",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const payload = checkRepo(root);
+    const warning = payload.details.dependency_warning;
+
+    assert.equal(warning.status, "warning");
+    assert.equal(warning.missing_dependencies_count, 2);
+    assert.deepEqual(warning.affected_skills, ["khuym:alpha"]);
+    assert.match(warning.message, /Dependency warning:/);
+    assert.match(warning.message, /khuym:alpha/);
+    assert.equal(warning.missing_commands.length, 1);
+    assert.equal(warning.missing_commands[0].command, "definitely-missing-command");
+    assert.equal(warning.missing_mcp_servers.length, 1);
+    assert.deepEqual(warning.missing_mcp_servers[0].servers, ["definitely_missing_mcp_server_name"]);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("onboard check JSON includes dependency warning summary when dependencies are missing", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-onboard-"));
+
+  try {
+    applyRepo(root, false);
+    const skillsRoot = path.join(root, "plugins", "khuym", "skills");
+    const alphaDir = path.join(skillsRoot, "alpha");
+    fs.mkdirSync(alphaDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(alphaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:alpha",
+        "metadata:",
+        "  dependencies:",
+        "    - id: missing-cli",
+        "      kind: command",
+        "      command: definitely-missing-command",
+        "      missing_effect: unavailable",
+        "      reason: required for test",
+        "    - id: missing-server",
+        "      kind: mcp_server",
+        "      server_names: [definitely_missing_mcp_server_name]",
+        "      config_sources: [repo_codex_config, global_codex_config]",
+        "      missing_effect: degraded",
+        "      reason: required for test",
+        "---",
+        "",
+        "# alpha",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const stdout = execFileSync("node", [path.join(root, ".codex", "khuym_status.mjs"), "--json"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    const status = JSON.parse(stdout);
+    assert.equal(status.dependency_health.summary.missing_dependencies, 2);
+
+    const onboardStdout = execFileSync(
+      "node",
+      [
+        LOCAL_ONBOARD_SCRIPT_PATH,
+        "--repo-root",
+        root,
+      ],
+      { cwd: root, encoding: "utf8" },
+    );
+    const onboardPayload = JSON.parse(onboardStdout);
+    const warning = onboardPayload.details.dependency_warning;
+
+    assert.equal(warning.status, "warning");
+    assert.match(warning.message, /Dependency warning:/);
+    assert.match(warning.message, /khuym:alpha/);
+    assert.equal(warning.missing_dependencies_count, 2);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

@@ -61,6 +61,9 @@ Run `node --version` first.
 Then run `node scripts/onboard_khuym.mjs --repo-root <repo-root>` from this skill directory and inspect the JSON result.
 
 - If `status = "up_to_date"`: proceed immediately.
+- Always inspect `details.dependency_warning` in the JSON output:
+  - If `status = "warning"`, treat bootstrap as non-blocking but degraded and read the summary message.
+  - Confirm which skills are affected plus the split between `missing_commands` and `missing_mcp_servers`.
 - If onboarding is missing or stale:
   - summarize what the script wants to create or update
   - if `status = "missing_runtime"`: stop, tell the user Khuym requires Node.js 18+, and ask them to install or upgrade Node before continuing

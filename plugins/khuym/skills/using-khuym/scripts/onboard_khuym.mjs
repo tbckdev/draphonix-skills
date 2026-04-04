@@ -62,6 +62,76 @@ function readDependencyHealth(repoRoot) {
   }
 }
 
+function normalizeDependencyTarget(target) {
+  if (Array.isArray(target)) {
+    return target.filter(Boolean);
+  }
+  if (typeof target === "string" && target.trim()) {
+    return [target.trim()];
+  }
+  return [];
+}
+
+function uniqueSorted(values) {
+  return [...new Set(values.filter(Boolean))].sort((left, right) => left.localeCompare(right));
+}
+
+function buildDependencyWarningSummary(dependencyHealth) {
+  const missingDependencies = Array.isArray(dependencyHealth?.missing_dependencies)
+    ? dependencyHealth.missing_dependencies
+    : [];
+
+  if (missingDependencies.length === 0) {
+    return {
+      status: "clear",
+      message: "No missing declared dependencies detected.",
+      missing_dependencies_count: 0,
+      affected_skills: [],
+      missing_commands: [],
+      missing_mcp_servers: [],
+    };
+  }
+
+  const missingCommands = missingDependencies
+    .filter((dependency) => dependency.kind === "command")
+    .map((dependency) => ({
+      command: normalizeDependencyTarget(dependency.target)[0] || "",
+      affects: uniqueSorted(Array.isArray(dependency.required_by) ? dependency.required_by : []),
+      status_impact: uniqueSorted(
+        Array.isArray(dependency.missing_effects) ? dependency.missing_effects : [],
+      ),
+    }));
+  const missingMcpServers = missingDependencies
+    .filter((dependency) => dependency.kind === "mcp_server")
+    .map((dependency) => ({
+      servers: normalizeDependencyTarget(dependency.target),
+      affects: uniqueSorted(Array.isArray(dependency.required_by) ? dependency.required_by : []),
+      status_impact: uniqueSorted(
+        Array.isArray(dependency.missing_effects) ? dependency.missing_effects : [],
+      ),
+    }));
+  const affectedSkills = uniqueSorted(
+    missingDependencies.flatMap((dependency) =>
+      Array.isArray(dependency.required_by) ? dependency.required_by : [],
+    ),
+  );
+
+  const commandCount = missingCommands.length;
+  const mcpCount = missingMcpServers.length;
+  return {
+    status: "warning",
+    message:
+      `Dependency warning: ${missingDependencies.length} declared dependencies are missing ` +
+      `(${commandCount} command${commandCount === 1 ? "" : "s"}, ` +
+      `${mcpCount} MCP server configuration gap${mcpCount === 1 ? "" : "s"}). ` +
+      `Affected skills: ${affectedSkills.join(", ")}.`,
+    missing_dependencies_count: missingDependencies.length,
+    affected_skills: affectedSkills,
+    missing_commands: missingCommands,
+    missing_mcp_servers: missingMcpServers,
+  };
+}
+
 export function getNodeRuntimeStatus(version = process.versions.node) {
   const major = Number.parseInt(String(version).split(".")[0] || "0", 10);
   const supported = Number.isFinite(major) && major >= MIN_NODE_MAJOR;
@@ -525,6 +595,7 @@ export function checkRepo(repoRoot) {
     return buildRuntimeBlockedPayload(repoRoot, "check");
   }
   const dependencyHealth = readDependencyHealth(repoRoot);
+  const dependencyWarning = buildDependencyWarningSummary(dependencyHealth);
 
   const pluginVersion = loadPluginVersion();
   const agentsPath = path.join(repoRoot, "AGENTS.md");
@@ -622,6 +693,7 @@ export function checkRepo(repoRoot) {
       onboarding_state: Object.keys(onboarding).length > 0 ? onboarding : null,
       runtime,
       dependency_health: dependencyHealth,
+      dependency_warning: dependencyWarning,
     },
   };
 }
