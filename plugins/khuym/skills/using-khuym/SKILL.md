@@ -110,6 +110,26 @@ Use it to get the current truth quickly, then open the deeper files it points to
 
 ---
 
+## Dependency Declaration Contract
+
+Every packaged Khuym skill must make its dependency posture explicit. There are only three valid states:
+
+1. **Command-backed skill** — declare each required CLI under `metadata.dependencies` with `kind: command`, the binary name in `command`, a truthful `missing_effect`, and a short `reason`.
+2. **MCP-backed skill** — declare each required MCP server under `metadata.dependencies` with `kind: mcp_server`, the expected `server_names`, the supported `config_sources`, a truthful `missing_effect`, and a short `reason`.
+3. **Dependency-free packaged skill** — declare `metadata.dependencies: []` to say the skill was reviewed and does not rely on first-class external tools.
+
+Do not leave a packaged skill with undeclared dependency posture. A missing declaration is treated as an uncovered inventory gap, not as an implicit dependency-free skill.
+
+When updating or adding packaged Khuym skills, keep the docs and the live report aligned by running:
+
+- `node plugins/khuym/skills/using-khuym/scripts/test_onboard_khuym.mjs`
+- `bash scripts/check-markdown-links.sh plugins/khuym/skills/using-khuym/SKILL.md`
+- `bash scripts/sync-skills.sh --dry-run`
+
+These checks are the package-wide contract: the report should stay fully covered, the docs must stay portable, and the synced skill bundle must reflect the same declaration rules.
+
+---
+
 ## Skill Catalog
 
 | # | Skill | One-line description | Load when... |

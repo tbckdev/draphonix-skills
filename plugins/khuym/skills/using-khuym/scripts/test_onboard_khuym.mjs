@@ -13,6 +13,7 @@ import { buildKhuymDependencyReport } from "./khuym_dependencies.mjs";
 
 const LOCAL_ONBOARD_SCRIPT_PATH = fileURLToPath(new URL("./onboard_khuym.mjs", import.meta.url));
 const LOCAL_USING_KHUYM_SKILL_PATH = fileURLToPath(new URL("../SKILL.md", import.meta.url));
+const LOCAL_REPO_ROOT = fileURLToPath(new URL("../../../../../", import.meta.url));
 
 function runSessionStartHook(root, payload = { cwd: root }) {
   const hookPath = path.join(root, ".codex", "hooks", "khuym_session_start.mjs");
@@ -660,6 +661,25 @@ test("dependency helper marks missing command and missing mcp_server dependencie
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("packaged Khuym inventory stays fully covered and the docs explain the declaration contract", () => {
+  const report = buildKhuymDependencyReport({ repoRoot: LOCAL_REPO_ROOT });
+  const skillText = fs.readFileSync(LOCAL_USING_KHUYM_SKILL_PATH, "utf8");
+
+  assert.equal(report.summary.skills_total, report.summary.skills_covered);
+  assert.equal(report.summary.skills_uncovered, 0);
+  assert.deepEqual(report.uncovered_skills, []);
+
+  assert.match(skillText, /## Dependency Declaration Contract/);
+  assert.match(skillText, /kind: command/);
+  assert.match(skillText, /kind: mcp_server/);
+  assert.match(skillText, /metadata\.dependencies: \[\]/);
+  assert.match(
+    skillText,
+    /bash scripts\/check-markdown-links\.sh plugins\/khuym\/skills\/using-khuym\/SKILL\.md/,
+  );
+  assert.match(skillText, /bash scripts\/sync-skills\.sh --dry-run/);
 });
 
 test("getNodeRuntimeStatus enforces the minimum supported major version", () => {
