@@ -109,6 +109,10 @@ function readDependencyHealth(repoRoot) {
       checked_at: utcNow(),
       summary: {
         skills_total: 0,
+        skills_covered: 0,
+        skills_with_declared_dependencies: 0,
+        skills_dependency_free: 0,
+        skills_uncovered: 0,
         skills_available: 0,
         skills_degraded: 0,
         skills_unavailable: 0,
@@ -116,6 +120,7 @@ function readDependencyHealth(repoRoot) {
         missing_dependencies: 0,
       },
       skills: [],
+      uncovered_skills: [],
       missing_dependencies: [],
       mcp_sources: [],
       error: error instanceof Error ? error.message : String(error),
@@ -337,13 +342,26 @@ function renderDependencyHealthLines(status) {
   const missingDependencies = Array.isArray(dependencyHealth?.missing_dependencies)
     ? dependencyHealth.missing_dependencies
     : [];
+  const uncoveredSkills = Array.isArray(dependencyHealth?.uncovered_skills)
+    ? dependencyHealth.uncovered_skills
+    : [];
 
   const lines = [
     "Dependency health:",
-    `- Skills: ${summary.skills_total || 0} total (${summary.skills_available || 0} available, ${summary.skills_degraded || 0} degraded, ${summary.skills_unavailable || 0} unavailable)`,
+    `- Packaged skill coverage: ${summary.skills_total || 0} total (${summary.skills_with_declared_dependencies || 0} with declared dependencies, ${summary.skills_dependency_free || 0} dependency-free, ${summary.skills_uncovered || 0} uncovered)`,
+    `- Availability among covered skills: ${summary.skills_available || 0} available, ${summary.skills_degraded || 0} degraded, ${summary.skills_unavailable || 0} unavailable`,
     `- Declared dependencies: ${summary.declared_dependencies || 0}`,
     `- Missing declared dependencies: ${summary.missing_dependencies || 0}`,
   ];
+
+  lines.push("- Uncovered packaged skills:");
+  if (uncoveredSkills.length === 0) {
+    lines.push("  - none");
+  } else {
+    for (const skill of uncoveredSkills) {
+      lines.push(`  - ${skill.skill_name} (${skill.skill_file})`);
+    }
+  }
 
   if (missingDependencies.length === 0) {
     lines.push("- Missing commands: none");

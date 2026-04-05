@@ -27,10 +27,12 @@ function parseInlineList(value) {
     .filter(Boolean);
 }
 
-function parseDependenciesFromFrontmatter(frontmatter) {
+function parseSkillMetadata(frontmatter) {
   const lines = frontmatter.split(/\r?\n/);
   let inMetadata = false;
   let inDependencies = false;
+  let dependenciesDeclared = false;
+  const metadata = {};
   const dependencies = [];
   let current = null;
 
@@ -50,15 +52,39 @@ function parseDependenciesFromFrontmatter(frontmatter) {
       break;
     }
 
-    if (!inDependencies) {
-      if (/^\s{2}dependencies:\s*$/.test(line)) {
-        inDependencies = true;
+    const metadataFieldMatch = line.match(/^\s{2}([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (metadataFieldMatch) {
+      const [, key, rawValue] = metadataFieldMatch;
+      if (key === "dependencies") {
+        dependenciesDeclared = true;
+        const inlineList = parseInlineList(rawValue);
+        if (inlineList !== null) {
+          metadata.dependencies = inlineList;
+          inDependencies = false;
+          current = null;
+          continue;
+        }
+
+        if (!rawValue.trim()) {
+          metadata.dependencies = dependencies;
+          inDependencies = true;
+          current = null;
+          continue;
+        }
       }
+
+      if (inDependencies) {
+        inDependencies = false;
+        current = null;
+      }
+
+      const inlineList = parseInlineList(rawValue);
+      metadata[key] = inlineList ?? parseScalar(rawValue);
       continue;
     }
 
-    if (/^\s{2}[A-Za-z0-9_-]+:\s*/.test(line)) {
-      break;
+    if (!inDependencies) {
+      continue;
     }
 
     const entryMatch = line.match(/^\s{4}-\s+id:\s*(.+)$/);
@@ -82,25 +108,39 @@ function parseDependenciesFromFrontmatter(frontmatter) {
     current[key] = inlineList ?? parseScalar(rawValue);
   }
 
-  return dependencies;
+  return {
+    metadata,
+    dependencies,
+    dependencies_declared: dependenciesDeclared,
+  };
 }
 
 function parseSkillFile(skillFilePath) {
   const source = fs.readFileSync(skillFilePath, "utf8");
   const frontmatterMatch = source.match(FRONTMATTER_PATTERN);
   if (!frontmatterMatch) {
-    return null;
+    return {
+      skill_name: path.basename(path.dirname(skillFilePath)),
+      skill_file: skillFilePath,
+      metadata: {},
+      dependencies: [],
+      dependencies_declared: false,
+    };
   }
 
   const frontmatter = frontmatterMatch[1];
   const nameMatch = frontmatter.match(/^name:\s*(.+)$/m);
   const skillName = nameMatch ? parseScalar(nameMatch[1]) : path.basename(path.dirname(skillFilePath));
-  const dependencies = parseDependenciesFromFrontmatter(frontmatter);
+  const parsedMetadata = parseSkillMetadata(frontmatter);
 
   return {
     skill_name: skillName,
     skill_file: skillFilePath,
-    dependencies,
+    metadata: parsedMetadata.metadata,
+    dependencies: parsedMetadata.dependencies_declared
+      ? parsedMetadata.metadata.dependencies || []
+      : [],
+    dependencies_declared: parsedMetadata.dependencies_declared,
   };
 }
 
@@ -197,6 +237,10 @@ function collectMcpSources({ repoRoot, skillsRoot, globalCodexConfigPath }) {
     path: globalConfigPath,
     server_names: parseMcpServerNamesFromToml(globalConfigPath),
   });
+
+  if (!fs.existsSync(skillsRoot)) {
+    return sources;
+  }
 
   for (const entry of fs.readdirSync(skillsRoot, { withFileTypes: true })) {
     if (!entry.isDirectory()) {
@@ -327,7 +371,7 @@ export function collectKhuymSkillDependencies(options = {}) {
   const declarations = [];
   for (const filePath of files) {
     const parsed = parseSkillFile(filePath);
-    if (!parsed || !Array.isArray(parsed.dependencies) || parsed.dependencies.length === 0) {
+    if (!parsed) {
       continue;
     }
 
@@ -338,6 +382,16 @@ export function collectKhuymSkillDependencies(options = {}) {
   }
 
   return declarations.sort((left, right) => left.skill_name.localeCompare(right.skill_name));
+}
+
+function getCoverageStatus(declaration) {
+  if (declaration.dependencies_declared && declaration.dependencies.length === 0) {
+    return "dependency_free";
+  }
+  if (declaration.dependencies.length > 0) {
+    return "declared_dependencies";
+  }
+  return "uncovered";
 }
 
 export function buildKhuymDependencyReport(options = {}) {
@@ -354,17 +408,19 @@ export function buildKhuymDependencyReport(options = {}) {
   });
 
   const skills = declarations.map((declaration) => {
+    const coverageStatus = getCoverageStatus(declaration);
     const dependencies = declaration.dependencies.map((dependency) =>
       probeDependency(dependency, {
         commandProbe,
         mcpSources,
       }),
     );
-    const status = summarizeSkillStatus(dependencies);
+    const status = coverageStatus === "uncovered" ? "uncovered" : summarizeSkillStatus(dependencies);
     const missingDependencies = dependencies.filter((dependency) => !dependency.available);
     return {
       skill_name: declaration.skill_name,
       skill_file: declaration.skill_file,
+      coverage_status: coverageStatus,
       status,
       dependencies,
       missing_dependencies: missingDependencies,
@@ -372,8 +428,21 @@ export function buildKhuymDependencyReport(options = {}) {
   });
 
   const missingDependencies = aggregateMissingDependencies(skills);
+  const uncoveredSkills = skills
+    .filter((skill) => skill.coverage_status === "uncovered")
+    .map((skill) => ({
+      skill_name: skill.skill_name,
+      skill_file: skill.skill_file,
+    }));
   const summary = {
     skills_total: skills.length,
+    skills_covered: skills.filter((skill) => skill.coverage_status !== "uncovered").length,
+    skills_with_declared_dependencies: skills.filter(
+      (skill) => skill.coverage_status === "declared_dependencies",
+    ).length,
+    skills_dependency_free: skills.filter((skill) => skill.coverage_status === "dependency_free")
+      .length,
+    skills_uncovered: uncoveredSkills.length,
     skills_available: skills.filter((skill) => skill.status === "available").length,
     skills_degraded: skills.filter((skill) => skill.status === "degraded").length,
     skills_unavailable: skills.filter((skill) => skill.status === "unavailable").length,
@@ -385,6 +454,7 @@ export function buildKhuymDependencyReport(options = {}) {
     checked_at: new Date().toISOString(),
     summary,
     skills,
+    uncovered_skills: uncoveredSkills,
     missing_dependencies: missingDependencies,
     mcp_sources: mcpSources.map((source) => ({
       key: source.key,

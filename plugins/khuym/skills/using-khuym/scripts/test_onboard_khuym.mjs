@@ -218,7 +218,127 @@ test("checkRepo reports dependency health summary without blocking onboarding st
     assert.equal(payload.status, "up_to_date");
     assert.ok(payload.details.dependency_health);
     assert.ok(typeof payload.details.dependency_health.summary.skills_total === "number");
+    assert.ok(typeof payload.details.dependency_health.summary.skills_uncovered === "number");
     assert.ok(Array.isArray(payload.details.dependency_health.skills));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("dependency report distinguishes dependency-free packaged skills from uncovered ones", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-coverage-"));
+  const skillsRoot = path.join(root, "plugins", "khuym", "skills");
+
+  try {
+    const alphaDir = path.join(skillsRoot, "alpha");
+    const betaDir = path.join(skillsRoot, "beta");
+    fs.mkdirSync(alphaDir, { recursive: true });
+    fs.mkdirSync(betaDir, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(alphaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:alpha",
+        "metadata:",
+        "  dependencies: []",
+        "---",
+        "",
+        "# alpha",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    fs.writeFileSync(
+      path.join(betaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:beta",
+        "description: uncovered fixture",
+        "---",
+        "",
+        "# beta",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const report = buildKhuymDependencyReport({
+      repoRoot: root,
+      skillsRoot,
+      globalCodexConfigPath: path.join(root, "missing-global.toml"),
+      commandProbe: () => ({ available: true, detail: "unused in coverage test" }),
+    });
+
+    assert.equal(report.summary.skills_total, 2);
+    assert.equal(report.summary.skills_covered, 1);
+    assert.equal(report.summary.skills_dependency_free, 1);
+    assert.equal(report.summary.skills_uncovered, 1);
+    assert.equal(report.summary.skills_available, 1);
+    assert.equal(report.summary.declared_dependencies, 0);
+    assert.deepEqual(report.uncovered_skills.map((skill) => skill.skill_name), ["khuym:beta"]);
+
+    const alpha = report.skills.find((skill) => skill.skill_name === "khuym:alpha");
+    const beta = report.skills.find((skill) => skill.skill_name === "khuym:beta");
+    assert.equal(alpha?.coverage_status, "dependency_free");
+    assert.equal(alpha?.status, "available");
+    assert.equal(beta?.coverage_status, "uncovered");
+    assert.equal(beta?.status, "uncovered");
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("khuym_status text surfaces uncovered packaged skills instead of skipping them", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-coverage-"));
+
+  try {
+    applyRepo(root, false);
+    const skillsRoot = path.join(root, "plugins", "khuym", "skills");
+    const alphaDir = path.join(skillsRoot, "alpha");
+    const betaDir = path.join(skillsRoot, "beta");
+    fs.mkdirSync(alphaDir, { recursive: true });
+    fs.mkdirSync(betaDir, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(alphaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:alpha",
+        "metadata:",
+        "  dependencies: []",
+        "---",
+        "",
+        "# alpha",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    fs.writeFileSync(
+      path.join(betaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:beta",
+        "description: uncovered fixture",
+        "---",
+        "",
+        "# beta",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const payload = checkRepo(root);
+    assert.equal(payload.details.dependency_health.summary.skills_dependency_free, 1);
+    assert.equal(payload.details.dependency_health.summary.skills_uncovered, 1);
+
+    const stdout = execFileSync("node", [path.join(root, ".codex", "khuym_status.mjs")], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.match(stdout, /Packaged skill coverage: 2 total/);
+    assert.match(stdout, /Uncovered packaged skills:/);
+    assert.match(stdout, /khuym:beta/);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

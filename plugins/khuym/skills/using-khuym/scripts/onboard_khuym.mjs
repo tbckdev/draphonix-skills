@@ -48,6 +48,10 @@ function readDependencyHealth(repoRoot) {
       checked_at: utcNow(),
       summary: {
         skills_total: 0,
+        skills_covered: 0,
+        skills_with_declared_dependencies: 0,
+        skills_dependency_free: 0,
+        skills_uncovered: 0,
         skills_available: 0,
         skills_degraded: 0,
         skills_unavailable: 0,
@@ -55,6 +59,7 @@ function readDependencyHealth(repoRoot) {
         missing_dependencies: 0,
       },
       skills: [],
+      uncovered_skills: [],
       missing_dependencies: [],
       mcp_sources: [],
       error: error instanceof Error ? error.message : String(error),
