@@ -280,10 +280,17 @@ function probeDependency(dependency, context) {
     const requestedNames = Array.isArray(dependency.server_names)
       ? dependency.server_names
       : [dependency.server_names].filter(Boolean);
+    const requestedSources = Array.isArray(dependency.config_sources)
+      ? dependency.config_sources
+      : [dependency.config_sources].filter(Boolean);
+    const candidateSources =
+      requestedSources.length > 0
+        ? context.mcpSources.filter((source) => requestedSources.includes(source.key))
+        : context.mcpSources;
     const configuredNames = new Set();
     const matchedSources = [];
 
-    for (const source of context.mcpSources) {
+    for (const source of candidateSources) {
       const sourceNames = source.server_names || [];
       for (const serverName of sourceNames) {
         configuredNames.add(serverName);
@@ -303,8 +310,9 @@ function probeDependency(dependency, context) {
         kind: "mcp_server",
         detail: available
           ? `Configured in ${matchedSources.join(", ")}`
-          : `Missing from configured MCP sources (${context.mcpSources.map((source) => source.key).join(", ")})`,
+          : `Missing from configured MCP sources (${candidateSources.map((source) => source.key).join(", ")})`,
         matched_sources: matchedSources,
+        checked_sources: candidateSources.map((source) => source.key),
       },
     };
   }

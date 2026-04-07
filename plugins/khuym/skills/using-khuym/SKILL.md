@@ -33,7 +33,7 @@ metadata:
     - id: gkg
       kind: mcp_server
       server_names: [gkg]
-      config_sources: [repo_codex_config, global_codex_config]
+      config_sources: [repo_codex_config, global_codex_config, skill_mcp_manifest:planning]
       missing_effect: degraded
       reason: Planning and exploration depend on gkg-backed architecture intelligence.
     - id: agent-mail

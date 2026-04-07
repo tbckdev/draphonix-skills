@@ -26,7 +26,7 @@ _If no prior learnings found: "No prior learnings for this domain."_
 
 ## Agent A: Architecture Snapshot
 
-> Source: gkg repo_map, file tree analysis
+> Source: gkg MCP `repo_map`, file tree analysis
 
 ### Relevant Packages / Modules
 
@@ -52,7 +52,7 @@ _If no prior learnings found: "No prior learnings for this domain."_
 
 ## Agent B: Pattern Search
 
-> Source: grep, semantic search, gkg get_references
+> Source: grep, semantic search, gkg MCP `search_codebase_definitions` / `get_references`
 
 ### Similar Existing Implementations
 

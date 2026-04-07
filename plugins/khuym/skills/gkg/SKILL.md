@@ -14,7 +14,7 @@ metadata:
     - id: gkg
       kind: mcp_server
       server_names: [gkg]
-      config_sources: [repo_codex_config, global_codex_config]
+      config_sources: [repo_codex_config, global_codex_config, skill_mcp_manifest:planning]
       missing_effect: unavailable
       reason: This skill's intelligence queries require the gkg MCP server.
 ---
@@ -33,63 +33,67 @@ If `.khuym/onboarding.json` is missing or stale for the current repo, stop and i
 - **planning** Phase 2 (Synthesis) needs to validate approach against codebase reality
 - **exploring** Phase 2 (Gray Area) needs quick pattern confirmation
 
-## Check for gkg First
+## Check MCP Availability First
 
-Before running any command, verify gkg is available:
+This skill is **MCP-backed**, not CLI-backed.
 
-```bash
-which gkg 2>/dev/null && echo "AVAILABLE" || echo "FALLBACK"
-```
+Before using it, confirm the `gkg` MCP server is available from one of the declared sources:
 
-If `FALLBACK` → use the [Fallback Commands](#fallback-without-gkg) section below.
+- repo-local `.codex/config.toml`
+- user-level `~/.codex/config.toml`
+- packaged manifest `plugins/khuym/skills/planning/mcp.json`
+
+The packaged planning manifest is the repo's built-in fallback for the expected `gkg` query tools. If none of those sources expose `gkg`, use the [Fallback Commands](#fallback-without-gkg) section below.
+
+Do **not** treat the local `gkg` binary as the normal execution path for this skill. In this environment the CLI manages indexing/server lifecycle, while the discovery workflow depends on MCP tools.
 
 ---
 
-## Commands
+## MCP Tool Mapping
 
-### `gkg repo_map` — Architecture Snapshot
+The supported MCP tool surface for `gkg` in this repo is declared in `plugins/khuym/skills/planning/mcp.json`.
+
+Use these tools conceptually through the MCP server:
+
+### `repo_map` — Architecture Snapshot
 
 Use at the **start** of any discovery phase. Produces a ranked overview of files and their relationships.
-
-```bash
-gkg repo_map
-```
 
 When to call: planning Phase 1, first time encountering an unfamiliar codebase.  
 Output: Save to `history/<feature>/discovery.md` under the heading `## Architecture Snapshot`.
 
-### `gkg search <query>` — Semantic Code Search
+### `search_codebase_definitions` + `read_definitions` — Pattern Search
 
-Find code by meaning, not just text match.
+Search for relevant definitions, then read the strongest matches for concrete evidence.
 
-```bash
-gkg search "authentication middleware"
-gkg search "database connection pooling"
-gkg search "error handling patterns"
-```
+Suggested queries:
+
+- `authentication middleware`
+- `database connection pooling`
+- `error handling patterns`
 
 When to call: planning Phase 1 Agent B (pattern search), exploring Phase 2 (existing patterns check).  
 Output: Append results to `history/<feature>/discovery.md` under `## Existing Patterns`.
 
-### `gkg deps <file>` — Dependency Graph
+### `get_references` + direct file read — Dependency Graph
 
-Show what a file imports and what imports it.
+Use `get_references` to find inbound usage of a target definition, then read the file directly to confirm imports and nearby structure. The packaged MCP surface here does not expose a single `deps` command, so dependency graphs should be assembled from references plus local file inspection.
 
-```bash
-gkg deps src/auth/middleware.ts
-gkg deps lib/db/connection.go
-```
+Suggested targets:
+
+- `src/auth/middleware.ts`
+- `lib/db/connection.go`
 
 When to call: planning Phase 1 Agent A (constraints check), validating (verifying bead file scope isolation doesn't break deps).  
 Output: Append to `history/<feature>/discovery.md` under `## Dependency Graph`.
 
-### `gkg context <file>` — Full File Context
+### `get_definition` + `read_definitions` — Full File Context
 
-Get imports, exports, and usage sites for a specific file.
+Resolve a definition, then read its surrounding content when a bead's file scope needs clarification.
 
-```bash
-gkg context src/api/routes.ts
-```
+Suggested target:
+
+- `src/api/routes.ts`
 
 When to call: When a bead's file scope needs clarification, or khuym:executing skill needs to understand a file before modifying it.  
 Output: Use inline (don't always save — only save if it changes the approach).
@@ -98,21 +102,20 @@ Output: Use inline (don't always save — only save if it changes the approach).
 
 ## Integration with Planning Skill
 
-The khuym:planning skill calls gkg in **Phase 1 (Discovery)** via parallel Task agents:
+The khuym:planning skill calls gkg in **Phase 1 (Discovery)** via parallel task agents:
 
-| Agent | gkg Command | Output Section |
-|-------|------------|----------------|
-| Agent A | `gkg repo_map` | `## Architecture Snapshot` |
-| Agent B | `gkg search <feature-keywords>` | `## Existing Patterns` |
-| Agent C | `gkg deps <entry-files>` | `## Dependency Graph` |
+| Agent | gkg MCP tools | Output Section |
+|-------|---------------|----------------|
+| Agent A | `repo_map` | `## Architecture Snapshot` |
+| Agent B | `search_codebase_definitions` + `read_definitions` | `## Existing Patterns` |
+| Agent C | `get_references` + direct file read | `## Dependency Graph` |
 
 In **Phase 2 (Synthesis)**, the khuym:planning skill may call:
-```bash
-gkg search "<proposed-approach-keywords>"
-```
+`search_codebase_definitions` with proposed-approach keywords
+
 to confirm the approach aligns with existing patterns — not to change the plan, but to catch contradictions early.
 
-The **exploring** skill uses gkg lightly — one `gkg search` call at most, to check if a gray area already has an answer in code. Never deep analysis during exploring.
+The **exploring** skill uses gkg lightly — one `search_codebase_definitions` pass at most, to check if a gray area already has an answer in code. Never deep analysis during exploring.
 
 ---
 
@@ -122,22 +125,22 @@ All gkg outputs saved to `history/<feature>/discovery.md`:
 
 ```markdown
 ## Architecture Snapshot
-<!-- gkg repo_map output -->
+<!-- gkg repo_map MCP output -->
 Generated: <timestamp>
 Top files by usage: <list>
 Key modules: <list>
 
 ## Existing Patterns
-<!-- gkg search results -->
+<!-- gkg MCP definition-search results -->
 Query: "<search-term>"
 Matches:
 - <file>: <summary> (deps: N)
 
 ## Dependency Graph
-<!-- gkg deps output -->
-File: <path>
-Imports: <list>
-Imported by: <list>
+<!-- gkg MCP references + local file-read summary -->
+Target: <path or definition>
+Imported by / referenced from: <list>
+Local import scan: <list>
 ```
 
 Always include:
@@ -149,22 +152,23 @@ Always include:
 
 ## Fallback Without gkg
 
-If gkg is not installed, use these equivalents:
+If the `gkg` MCP server is not configured, use these equivalents:
 
-| gkg Command | Fallback |
+| gkg MCP need | Fallback |
 |-------------|----------|
-| `gkg repo_map` | `find . -name "*.ts" -o -name "*.go" -o -name "*.py" \| head -60` + `cat package.json` or equivalent manifest |
-| `gkg search <query>` | `grep -r "<query>" --include="*.ts" -l \| head -20` |
-| `gkg deps <file>` | `grep -r "<filename>" --include="*.ts" -l` + manual import scan |
-| `gkg context <file>` | `head -50 <file>` + grep for exports |
+| `repo_map` | `find . -name "*.ts" -o -name "*.go" -o -name "*.py" \| head -60` + `cat package.json` or equivalent manifest |
+| `search_codebase_definitions` | `grep -r "<query>" --include="*.ts" -l \| head -20` |
+| `get_references` + local import graph | `grep -r "<filename or symbol>" --include="*.ts" -l` + manual import scan |
+| `get_definition` / `read_definitions` | `head -50 <file>` + grep for exports |
 
-Note fallback in discovery.md: `> gkg not available — used grep/find fallback`.
+Note fallback in discovery.md: `> gkg MCP server not available — used grep/find fallback`.
 
 ---
 
 ## Red Flags
 
-- **Do not index on every run** — `gkg index` is one-time or post-major-refactor only. If it's slow, it means re-indexing is happening unnecessarily.
+- **Do not use the local `gkg` CLI as the normal discovery path** — this skill is about the MCP query surface, not server/index administration.
+- **Do not index on every run** — indexing/server lifecycle belongs to whoever owns the `gkg` environment, not to routine planning calls.
 - **Do not use gkg as a replacement for reading files** — gkg gives structural overview; actually read key files before modifying them.
 - **Do not run gkg during executing** — architecture queries belong in planning/validating. If an executing agent needs codebase context, it reads the already-generated `discovery.md`.
 - **Do not skip saving to discovery.md** — downstream agents (synthesizer, plan-checker) depend on this file.

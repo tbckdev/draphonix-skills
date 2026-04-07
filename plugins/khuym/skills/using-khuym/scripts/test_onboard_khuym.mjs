@@ -663,6 +663,98 @@ test("dependency helper marks missing command and missing mcp_server dependencie
   }
 });
 
+test("dependency helper respects declared MCP config_sources and can use packaged manifests", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-mcp-sources-"));
+  const skillsRoot = path.join(root, "plugins", "khuym", "skills");
+
+  try {
+    const alphaDir = path.join(skillsRoot, "alpha");
+    const betaDir = path.join(skillsRoot, "beta");
+    const planningDir = path.join(skillsRoot, "planning");
+    fs.mkdirSync(alphaDir, { recursive: true });
+    fs.mkdirSync(betaDir, { recursive: true });
+    fs.mkdirSync(planningDir, { recursive: true });
+
+    fs.writeFileSync(
+      path.join(planningDir, "mcp.json"),
+      JSON.stringify(
+        {
+          gkg: {
+            type: "http",
+            url: "http://localhost:27495/mcp",
+            includeTools: ["repo_map"],
+          },
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    fs.writeFileSync(
+      path.join(alphaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:alpha",
+        "metadata:",
+        "  dependencies:",
+        "    - id: gkg",
+        "      kind: mcp_server",
+        "      server_names: [gkg]",
+        "      config_sources: [repo_codex_config, global_codex_config]",
+        "      missing_effect: unavailable",
+        "      reason: repo/global only fixture",
+        "---",
+        "",
+        "# alpha",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    fs.writeFileSync(
+      path.join(betaDir, "SKILL.md"),
+      [
+        "---",
+        "name: khuym:beta",
+        "metadata:",
+        "  dependencies:",
+        "    - id: gkg",
+        "      kind: mcp_server",
+        "      server_names: [gkg]",
+        "      config_sources: [skill_mcp_manifest:planning]",
+        "      missing_effect: unavailable",
+        "      reason: packaged-manifest fixture",
+        "---",
+        "",
+        "# beta",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const report = buildKhuymDependencyReport({
+      repoRoot: root,
+      skillsRoot,
+      globalCodexConfigPath: path.join(root, "missing-global.toml"),
+      commandProbe: () => ({ available: true, detail: "unused in mcp source test" }),
+    });
+
+    const alpha = report.skills.find((skill) => skill.skill_name === "khuym:alpha");
+    const beta = report.skills.find((skill) => skill.skill_name === "khuym:beta");
+
+    assert.equal(alpha?.status, "unavailable");
+    assert.deepEqual(alpha?.dependencies[0].probe.checked_sources, [
+      "repo_codex_config",
+      "global_codex_config",
+    ]);
+    assert.equal(beta?.status, "available");
+    assert.deepEqual(beta?.dependencies[0].probe.matched_sources, ["skill_mcp_manifest:planning"]);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("packaged Khuym inventory stays fully covered and the docs explain the declaration contract", () => {
   const report = buildKhuymDependencyReport({ repoRoot: LOCAL_REPO_ROOT });
   const skillText = fs.readFileSync(LOCAL_USING_KHUYM_SKILL_PATH, "utf8");
