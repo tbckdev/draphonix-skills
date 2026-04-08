@@ -6,7 +6,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 
 import { applyRepo, checkRepo, getNodeRuntimeStatus } from "./onboard_khuym.mjs";
 import { buildKhuymDependencyReport } from "./khuym_dependencies.mjs";
@@ -15,14 +15,67 @@ const LOCAL_ONBOARD_SCRIPT_PATH = fileURLToPath(new URL("./onboard_khuym.mjs", i
 const LOCAL_USING_KHUYM_SKILL_PATH = fileURLToPath(new URL("../SKILL.md", import.meta.url));
 const LOCAL_REPO_ROOT = fileURLToPath(new URL("../../../../../", import.meta.url));
 
-function runSessionStartHook(root, payload = { cwd: root }) {
+function runSessionStartHook(root, payload = { cwd: root }, env = {}) {
   const hookPath = path.join(root, ".codex", "hooks", "khuym_session_start.mjs");
   const stdout = execFileSync("node", [hookPath], {
     cwd: root,
     encoding: "utf8",
     input: JSON.stringify(payload),
+    env: { ...process.env, ...env },
   });
   return JSON.parse(stdout);
+}
+
+async function startMockGkgServer(routes) {
+  const child = spawn(
+    process.execPath,
+    [
+      "-e",
+      `
+const { createServer } = require("node:http");
+const routes = ${JSON.stringify(routes)};
+const server = createServer((request, response) => {
+  const handler = routes[request.url || ""];
+  if (!handler) {
+    response.writeHead(404, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: "not found" }));
+    return;
+  }
+  response.writeHead(200, { "content-type": "application/json" });
+  response.end(JSON.stringify(handler));
+});
+server.listen(0, "127.0.0.1", () => {
+  const address = server.address();
+  process.stdout.write(String(address.port) + "\\n");
+});
+process.on("SIGTERM", () => server.close(() => process.exit(0)));
+`,
+    ],
+    { stdio: ["ignore", "pipe", "inherit"] },
+  );
+
+  const port = await new Promise((resolve, reject) => {
+    let buffer = "";
+    child.stdout.on("data", (chunk) => {
+      buffer += chunk.toString("utf8");
+      const line = buffer.split("\n")[0]?.trim();
+      if (line) {
+        resolve(Number(line));
+      }
+    });
+    child.on("error", reject);
+    child.on("exit", (code) => {
+      reject(new Error(`mock gkg server exited before startup with code ${code}`));
+    });
+  });
+
+  return {
+    url: `http://127.0.0.1:${port}`,
+    async close() {
+      child.kill("SIGTERM");
+      await new Promise((resolve) => child.once("exit", resolve));
+    },
+  };
 }
 
 test("applyRepo creates full repo onboarding with node-based hooks", () => {
@@ -154,6 +207,63 @@ test("installed khuym_status script reports onboarding and state", () => {
     assert.ok(status.dependency_health);
     assert.ok(typeof status.dependency_health.summary.missing_dependencies === "number");
     assert.ok(status.next_reads.includes("AGENTS.md"));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("installed khuym_status reports gkg readiness for a supported indexed repo", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-gkg-"));
+  const mockServer = await startMockGkgServer({
+    "/api/info": { port: 27495, version: "0.24.0" },
+    "/api/workspace/list": {
+      workspaces: [
+        {
+          workspace_folder_path: root,
+          projects: [{ project_path: root }],
+        },
+      ],
+    },
+  });
+
+  try {
+    await applyRepo(root, false);
+    fs.mkdirSync(path.join(root, "src"), { recursive: true });
+    fs.writeFileSync(path.join(root, "src", "index.ts"), "export const value = 1;\n", "utf8");
+
+    const stdout = execFileSync("node", [path.join(root, ".codex", "khuym_status.mjs"), "--json"], {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, KHUYM_GKG_SERVER_URL: mockServer.url },
+    });
+    const status = JSON.parse(stdout);
+
+    assert.equal(status.gkg_readiness.supported_repo, true);
+    assert.deepEqual(status.gkg_readiness.supported_languages, ["TypeScript / JavaScript"]);
+    assert.equal(status.gkg_readiness.primary_supported_language, "TypeScript / JavaScript");
+    assert.equal(status.gkg_readiness.coverage, "full");
+    assert.equal(status.gkg_readiness.server_reachable, true);
+    assert.equal(status.gkg_readiness.project_indexed, true);
+    assert.match(status.gkg_readiness.recommended_action, /ready/i);
+  } finally {
+    await mockServer.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("checkRepo reports gkg fallback for unsupported repos", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-gkg-"));
+
+  try {
+    await applyRepo(root, false);
+    fs.mkdirSync(path.join(root, "src"), { recursive: true });
+    fs.writeFileSync(path.join(root, "src", "main.rs"), "fn main() {}\n", "utf8");
+
+    const payload = await checkRepo(root);
+
+    assert.equal(payload.details.gkg_readiness.supported_repo, false);
+    assert.equal(payload.details.gkg_readiness.coverage, "none");
+    assert.match(payload.details.gkg_readiness.recommended_action, /fallback/i);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -533,6 +643,29 @@ test("session-start hook stays quiet about dependency warnings when dependencies
   }
 });
 
+test("session-start hook surfaces gkg readiness guidance for supported repos that are not ready", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-gkg-hook-"));
+
+  try {
+    applyRepo(root, false);
+    fs.mkdirSync(path.join(root, "src"), { recursive: true });
+    fs.writeFileSync(path.join(root, "src", "index.ts"), "export const value = 1;\n", "utf8");
+
+    const payload = runSessionStartHook(
+      root,
+      { cwd: root },
+      { KHUYM_GKG_SERVER_URL: "http://127.0.0.1:9" },
+    );
+    const context = payload.hookSpecificOutput.additionalContext;
+
+    assert.match(context, /gkg readiness:/);
+    assert.match(context, /gkg index/);
+    assert.match(context, /gkg server start/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("entry surfaces share the same missing-command vs missing-MCP wording boundary", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-onboard-"));
 
@@ -758,6 +891,12 @@ test("dependency helper respects declared MCP config_sources and can use package
 test("packaged Khuym inventory stays fully covered and the docs explain the declaration contract", () => {
   const report = buildKhuymDependencyReport({ repoRoot: LOCAL_REPO_ROOT });
   const skillText = fs.readFileSync(LOCAL_USING_KHUYM_SKILL_PATH, "utf8");
+  const planningMcp = JSON.parse(
+    fs.readFileSync(
+      path.join(LOCAL_REPO_ROOT, "plugins", "khuym", "skills", "planning", "mcp.json"),
+      "utf8",
+    ),
+  );
 
   assert.equal(report.summary.skills_total, report.summary.skills_covered);
   assert.equal(report.summary.skills_uncovered, 0);
@@ -772,6 +911,15 @@ test("packaged Khuym inventory stays fully covered and the docs explain the decl
     /bash scripts\/check-markdown-links\.sh plugins\/khuym\/skills\/using-khuym\/SKILL\.md/,
   );
   assert.match(skillText, /bash scripts\/sync-skills\.sh --dry-run/);
+  assert.deepEqual(planningMcp.gkg.includeTools, [
+    "list_projects",
+    "index_project",
+    "repo_map",
+    "search_codebase_definitions",
+    "get_references",
+    "get_definition",
+    "read_definitions",
+  ]);
 });
 
 test("getNodeRuntimeStatus enforces the minimum supported major version", () => {

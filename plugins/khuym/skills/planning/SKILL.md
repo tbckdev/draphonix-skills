@@ -153,6 +153,11 @@ Handoff: "Invoke khuym:validating skill for Phase <n>."
 
 If `.codex/khuym_status.mjs` exists, run `node .codex/khuym_status.mjs --json` first so you start from the latest onboarding/state/handoff snapshot instead of inferring it from memory.
 
+If the scout reports a supported gkg repo, treat `gkg` as the default discovery path:
+
+- `server_reachable = false` or `project_indexed = false` means stop and make gkg ready before Phase 1 discovery.
+- `supported_repo = false` means document the fallback and continue with grep/file inspection instead of stalling.
+
 **Read CONTEXT.md first.** It is the single source of truth. Every research decision, every phase, every story, and every bead must honor the locked decisions inside it.
 
 ```bash
@@ -208,6 +213,8 @@ Always explore:
 2. **Existing patterns** — what should be reused or modeled after
 3. **Technical constraints** — runtime, dependencies, build/test requirements
 
+For supported repos with green readiness, use gkg MCP tools for those first three areas before falling back to ad hoc grep.
+
 Explore if relevant:
 
 4. **External research** — only when the feature introduces a novel library, integration, or pattern
@@ -226,6 +233,8 @@ All discovery findings go to:
 `history/<feature>/discovery.md`
 
 Use `references/discovery-template.md`.
+
+If gkg is unavailable for this repo/session, say that explicitly in `discovery.md` before the fallback findings.
 
 ---
 

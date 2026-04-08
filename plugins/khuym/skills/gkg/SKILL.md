@@ -45,7 +45,12 @@ Before using it, confirm the `gkg` MCP server is available from one of the decla
 
 The packaged planning manifest is the repo's built-in fallback for the expected `gkg` query tools. If none of those sources expose `gkg`, use the [Fallback Commands](#fallback-without-gkg) section below.
 
-Do **not** treat the local `gkg` binary as the normal execution path for this skill. In this environment the CLI manages indexing/server lifecycle, while the discovery workflow depends on MCP tools.
+Before doing any discovery query, check the session scout output from `node .codex/khuym_status.mjs --json`:
+
+- `supported_repo = false` means this repo is outside gkg's supported language set. Do not force it; use the fallback commands.
+- `server_reachable = false` or `project_indexed = false` means `using-khuym` must finish readiness first. Do not pretend MCP discovery is ready when it is not.
+
+Do **not** treat the local `gkg` binary as the normal discovery path for this skill. CLI commands are only for lifecycle/bootstrap readiness. Once ready, discovery work should go through MCP tools.
 
 ---
 
@@ -54,6 +59,20 @@ Do **not** treat the local `gkg` binary as the normal execution path for this sk
 The supported MCP tool surface for `gkg` in this repo is declared in `plugins/khuym/skills/planning/mcp.json`.
 
 Use these tools conceptually through the MCP server:
+
+### `list_projects` — Index Presence Check
+
+Use first when the scout says the repo should be gkg-backed. Confirms the current project exists in the index before any deeper query work.
+
+When to call: planning Phase 1 at the start of discovery, or whenever an agent suspects the scout is stale.  
+Output: note success inline, or stop and hand back to `using-khuym` readiness if the repo is missing.
+
+### `index_project` — Rebuild an Existing Project Index
+
+Use when the project is already indexed but obviously stale or incomplete.
+
+When to call: planning or validating only after `list_projects` confirms the project already exists.  
+Output: note the refresh inline, then re-run the query that needed fresh data.
 
 ### `repo_map` — Architecture Snapshot
 
@@ -106,7 +125,7 @@ The khuym:planning skill calls gkg in **Phase 1 (Discovery)** via parallel task 
 
 | Agent | gkg MCP tools | Output Section |
 |-------|---------------|----------------|
-| Agent A | `repo_map` | `## Architecture Snapshot` |
+| Agent A | `list_projects` -> `repo_map` | `## Architecture Snapshot` |
 | Agent B | `search_codebase_definitions` + `read_definitions` | `## Existing Patterns` |
 | Agent C | `get_references` + direct file read | `## Dependency Graph` |
 
@@ -152,7 +171,7 @@ Always include:
 
 ## Fallback Without gkg
 
-If the `gkg` MCP server is not configured, use these equivalents:
+If the `gkg` MCP server is not configured, the repo is unsupported, or readiness is still red, use these equivalents:
 
 | gkg MCP need | Fallback |
 |-------------|----------|
@@ -161,14 +180,15 @@ If the `gkg` MCP server is not configured, use these equivalents:
 | `get_references` + local import graph | `grep -r "<filename or symbol>" --include="*.ts" -l` + manual import scan |
 | `get_definition` / `read_definitions` | `head -50 <file>` + grep for exports |
 
-Note fallback in discovery.md: `> gkg MCP server not available — used grep/find fallback`.
+Note fallback in discovery.md: `> gkg was unavailable for this repo/session, so discovery used grep/find fallback.`
 
 ---
 
 ## Red Flags
 
-- **Do not use the local `gkg` CLI as the normal discovery path** — this skill is about the MCP query surface, not server/index administration.
-- **Do not index on every run** — indexing/server lifecycle belongs to whoever owns the `gkg` environment, not to routine planning calls.
+- **Do not skip readiness checks** — `MCP configured` is not the same as `server reachable` or `project indexed`.
+- **Do not use `index_project` for first-time indexing** — it is for refreshing an existing indexed project, not replacing `gkg index <repo-root>`.
+- **Do not use the local `gkg` CLI as the normal discovery path** — this skill is about the MCP query surface after readiness is green.
 - **Do not use gkg as a replacement for reading files** — gkg gives structural overview; actually read key files before modifying them.
 - **Do not run gkg during executing** — architecture queries belong in planning/validating. If an executing agent needs codebase context, it reads the already-generated `discovery.md`.
 - **Do not skip saving to discovery.md** — downstream agents (synthesizer, plan-checker) depend on this file.

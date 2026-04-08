@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   buildDefaultState,
   normalizeKhuymState,
+  readGkgReadiness,
   readKhuymState,
   writeKhuymState,
 } from "./khuym_state.mjs";
@@ -610,6 +611,7 @@ export function checkRepo(repoRoot) {
   }
   const dependencyHealth = readDependencyHealth(repoRoot);
   const dependencyWarning = buildDependencyWarningSummary(dependencyHealth);
+  const gkgReadiness = readGkgReadiness(repoRoot);
 
   const pluginVersion = loadPluginVersion();
   const agentsPath = path.join(repoRoot, "AGENTS.md");
@@ -708,6 +710,7 @@ export function checkRepo(repoRoot) {
       runtime,
       dependency_health: dependencyHealth,
       dependency_warning: dependencyWarning,
+      gkg_readiness: gkgReadiness,
     },
   };
 }

@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildKhuymDependencyReport } from "../khuym_dependencies.mjs";
+import { readGkgReadiness } from "../khuym_state.mjs";
 
 function findRepoRoot(start) {
   let candidate = path.resolve(start || ".");
@@ -106,6 +107,15 @@ export async function main() {
 
   if (fs.existsSync(criticalPatterns)) {
     notes.push("If you move into planning or execution, read history/learnings/critical-patterns.md.");
+  }
+
+  const gkgReadiness = readGkgReadiness(repoRoot);
+  if (gkgReadiness.supported_repo && (!gkgReadiness.server_reachable || !gkgReadiness.project_indexed)) {
+    notes.push(`gkg readiness: ${gkgReadiness.recommended_action}`);
+  } else if (!gkgReadiness.supported_repo) {
+    notes.push(
+      "This repo is outside gkg's supported language set, so architecture discovery should use grep/file inspection fallback.",
+    );
   }
 
   const dependencyWarning = buildSessionDependencyWarning(repoRoot);

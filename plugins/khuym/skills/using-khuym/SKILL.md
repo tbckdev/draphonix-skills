@@ -101,12 +101,27 @@ node .codex/khuym_status.mjs --json
 The scout is read-only. It summarizes:
 
 - onboarding health
+- gkg readiness for this repo
 - `.khuym/state.json`
 - `.khuym/STATE.md`
 - `.khuym/HANDOFF.json`
 - recommended next reads/actions
 
 Use it to get the current truth quickly, then open the deeper files it points to.
+
+### gkg Readiness Is Part of Session Start
+
+Treat `gkg` as a first-class discovery dependency for supported repositories.
+
+After reading the scout output:
+
+- If `gkg readiness` says the repo is unsupported: do not force gkg. Note the fallback and use grep/file inspection.
+- If the repo is supported and `server_reachable = false`: make `gkg` ready before planning by running `gkg index <repo-root>` and then `gkg server start`.
+- If the repo is supported and `project_indexed = false`: stop the server if needed, run `gkg index <repo-root>`, then start the server again.
+- If both server and index are ready: downstream skills should assume `gkg` is the default architecture-discovery path, not an optional nice-to-have.
+
+Supported repo languages for this bootstrap are: Ruby, Java, TypeScript / JavaScript, Kotlin, and Python.
+Use the scout's `supported_languages` and `primary_supported_language` fields instead of guessing from the prompt.
 
 ---
 
@@ -144,7 +159,7 @@ These checks are the package-wide contract: the report should stay fully covered
 | 8 | `khuym:compounding` | Capture learnings → history/learnings/ → critical-patterns.md | Feature shipped; extract patterns/decisions/failures for future runs |
 | 9 | `khuym:writing-khuym-skills` | TDD-for-skills: RED-GREEN-REFACTOR + persuasion psychology | Improving or creating khuym skills themselves |
 | 10 | `khuym:debugging` | Root-cause analysis for blocked beads and execution failures | Agent stuck, bead blocked, unexpected error |
-| 11 | `khuym:gkg` | Codebase intelligence via gkg (repo map, dependency graph) | Need deep codebase understanding before planning |
+| 11 | `khuym:gkg` | Codebase intelligence via gkg MCP tools after readiness is green | Need deep codebase understanding before planning |
 
 ---
 
@@ -190,6 +205,11 @@ On every session start, before doing anything else:
 
 0.5. If .codex/khuym_status.mjs exists: run `node .codex/khuym_status.mjs --json`
    → Use the scout output to decide which files to open next
+
+0.6. Check `gkg_readiness` from the scout output
+   → Unsupported repo: note the fallback and continue without gkg
+   → Supported repo + server/index not ready: make gkg ready before planning or deep discovery
+   → Supported repo + ready: planning should use gkg MCP tools as the default discovery path
 
 1. Check for .khuym/ directory in project root
    → If missing: mkdir -p .khuym/ and create defaults below

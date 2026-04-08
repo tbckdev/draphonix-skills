@@ -3,6 +3,8 @@
 		"type": "http",
 		"url": "http://localhost:27495/mcp",
 		"includeTools": [
+			"list_projects",
+			"index_project",
 			"repo_map",
 			"search_codebase_definitions",
 			"get_references",
