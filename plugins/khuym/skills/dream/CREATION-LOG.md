@@ -3,7 +3,7 @@
 ## Source Material
 
 Origin:
-- Dream behavior adaptation from `DREAM_FEATURE_SPEC.md`
+- Dream behavior adaptation from archived reverse-engineering notes captured during the original Dream research pass
 - Khuym process contracts from `AGENTS.md`
 - Locked decisions from `history/dream-skill/CONTEXT.md` (D1-D6)
 

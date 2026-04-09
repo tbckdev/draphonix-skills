@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-plugin_json="$repo_root/.claude-plugin/plugin.json"
+skills_root="$repo_root/plugins/khuym/skills"
 agents_target_root="${AGENTS_SKILLS_DIR:-$HOME/.agents/skills}"
 claude_target_root="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 targets="${SKILLS_SYNC_TARGETS:-agents}"
@@ -42,23 +42,45 @@ case "${targets}" in
     ;;
 esac
 
-python3 - "$plugin_json" "$agents_target_root" "$claude_target_root" "$targets" "$dry_run" <<'PY'
+python3 - "$skills_root" "$agents_target_root" "$claude_target_root" "$targets" "$dry_run" <<'PY'
 from __future__ import annotations
 
-import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
 
-plugin_json = Path(sys.argv[1]).resolve()
+skills_root = Path(sys.argv[1]).resolve()
 agents_target_root = Path(sys.argv[2]).expanduser()
 claude_target_root = Path(sys.argv[3]).expanduser()
 targets = sys.argv[4]
 dry_run = sys.argv[5] == "1"
 
-data = json.loads(plugin_json.read_text(encoding="utf8"))
-skills = data.get("skills", [])
+if not skills_root.is_dir():
+    raise SystemExit(f"Missing canonical skills directory: {skills_root}")
+
+name_pattern = re.compile(r"^name:\s*(.+?)\s*$")
+skills: list[tuple[str, Path]] = []
+
+for skill_md in sorted(skills_root.glob("*/SKILL.md")):
+    lines = skill_md.read_text(encoding="utf8").splitlines()
+    if not lines or lines[0].strip() != "---":
+        raise SystemExit(f"Missing YAML frontmatter in {skill_md}")
+
+    public_name: str | None = None
+    for line in lines[1:]:
+        if line.strip() == "---":
+            break
+        match = name_pattern.match(line)
+        if match:
+            public_name = match.group(1).strip().strip("'\"")
+            break
+
+    if not public_name:
+        raise SystemExit(f"Missing frontmatter name in {skill_md}")
+
+    skills.append((public_name, skill_md.parent))
 
 target_roots: list[tuple[str, Path]] = []
 if targets in {"agents", "all"}:
@@ -68,14 +90,10 @@ if targets in {"claude", "all"}:
 
 actions: list[tuple[str, str, Path, Path]] = []
 
-for skill in skills:
-    source = (plugin_json.parent / skill["path"]).resolve()
-    if source.name != "SKILL.md":
-        raise SystemExit(f"Unexpected skill entrypoint: {source}")
-    source_dir = source.parent
+for name, source_dir in skills:
     for target_name, target_root in target_roots:
-        target_dir = target_root / skill["name"]
-        actions.append((target_name, skill["name"], source_dir, target_dir))
+        target_dir = target_root / name
+        actions.append((target_name, name, source_dir, target_dir))
 
 if dry_run:
     for target_name, name, source_dir, target_dir in actions:

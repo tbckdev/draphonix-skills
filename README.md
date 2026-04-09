@@ -176,18 +176,15 @@ This repo follows the standard Codex plugin structure:
 
 For this repository, the installation flow is: clone the repo locally, add its marketplace, then install the plugin from that marketplace.
 
-## Install In Claude Code
+## Use In Claude Code
 
-Claude Code compatibility uses the marketplace in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
+This repo no longer ships separate Claude plugin metadata. If you want Claude Code to see the same raw skills, mirror the canonical skill tree into `~/.claude/skills`:
 
-### Inside Claude Code
-
-`claude plugin marketplace add` accepts a URL, path, or GitHub repo source. This repository can be added by GitHub slug:
-
-```text
-/plugin marketplace add hoangnb24/skills
-/plugin install khuym:using-khuym@khuym
+```bash
+bash scripts/sync-skills.sh --target claude
 ```
+
+`scripts/sync-skills.sh` reads each skill directly from [`plugins/khuym/skills/`](plugins/khuym/skills), so Codex packaging and raw skill mirrors stay aligned.
 
 ## Skill Catalog
 
@@ -245,7 +242,6 @@ Recommended verification set:
 bash scripts/check-markdown-links.sh
 bash scripts/sync-skills.sh --dry-run
 bash scripts/sync-skills.sh --target all --dry-run
-claude plugin validate .
 ```
 
 ## License

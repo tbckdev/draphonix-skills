@@ -1,6 +1,6 @@
 # Creating Skills
 
-This guide covers the skill format, directory conventions, and how this repo packages skills for Codex and Claude Code.
+This guide covers the skill format, directory conventions, and how this repo packages skills for Codex plus optional raw skill mirrors for other agent runtimes.
 
 ## Plugin Packaging Overview
 
@@ -15,7 +15,7 @@ This repository is a Codex plugin repo. The installable Codex plugin is `khuym`.
 The canonical skill directories live under [`plugins/khuym/skills/`](plugins/khuym/skills).
 
 - Codex consumes the packaged plugin under [`plugins/khuym/.codex-plugin/plugin.json`](plugins/khuym/.codex-plugin/plugin.json), with the repo marketplace defined in [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json).
-- Claude Code consumes raw symlinked skills from `~/.claude/skills/*/SKILL.md` or the plugin metadata in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
+- Other runtimes such as Claude Code can consume raw symlinked skills from `~/.claude/skills/*/SKILL.md` after mirroring the canonical tree with `bash scripts/sync-skills.sh --target claude`.
 
 In both environments, the `description` field from the YAML frontmatter is the trigger text that determines when a skill is selected.
 
@@ -172,7 +172,6 @@ For repo-level verification, also run:
 ```bash
 bash scripts/sync-skills.sh --dry-run
 bash scripts/sync-skills.sh --target all --dry-run
-claude plugin validate .
 ```
 
 ## Khuym-Specific Conventions
