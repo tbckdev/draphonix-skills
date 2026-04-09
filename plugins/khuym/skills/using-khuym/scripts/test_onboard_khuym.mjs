@@ -798,18 +798,19 @@ test("dependency helper marks missing command and missing mcp_server dependencie
 
 test("dependency helper respects declared MCP config_sources and can use packaged manifests", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "khuym-mcp-sources-"));
+  const pluginRoot = path.join(root, "plugins", "khuym");
   const skillsRoot = path.join(root, "plugins", "khuym", "skills");
 
   try {
     const alphaDir = path.join(skillsRoot, "alpha");
     const betaDir = path.join(skillsRoot, "beta");
-    const planningDir = path.join(skillsRoot, "planning");
+    const pluginManifestDir = path.join(pluginRoot, ".codex-plugin");
     fs.mkdirSync(alphaDir, { recursive: true });
     fs.mkdirSync(betaDir, { recursive: true });
-    fs.mkdirSync(planningDir, { recursive: true });
+    fs.mkdirSync(pluginManifestDir, { recursive: true });
 
     fs.writeFileSync(
-      path.join(planningDir, "mcp.json"),
+      path.join(pluginRoot, ".mcp.json"),
       JSON.stringify(
         {
           gkg: {
@@ -817,6 +818,19 @@ test("dependency helper respects declared MCP config_sources and can use package
             url: "http://localhost:27495/mcp",
             includeTools: ["repo_map"],
           },
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    fs.writeFileSync(
+      path.join(pluginManifestDir, "plugin.json"),
+      JSON.stringify(
+        {
+          name: "khuym",
+          version: "0.0.0-test",
+          mcpServers: "./.mcp.json",
         },
         null,
         2,
@@ -855,7 +869,7 @@ test("dependency helper respects declared MCP config_sources and can use package
         "    - id: gkg",
         "      kind: mcp_server",
         "      server_names: [gkg]",
-        "      config_sources: [skill_mcp_manifest:planning]",
+        "      config_sources: [plugin_mcp_manifest]",
         "      missing_effect: unavailable",
         "      reason: packaged-manifest fixture",
         "---",
@@ -882,7 +896,7 @@ test("dependency helper respects declared MCP config_sources and can use package
       "global_codex_config",
     ]);
     assert.equal(beta?.status, "available");
-    assert.deepEqual(beta?.dependencies[0].probe.matched_sources, ["skill_mcp_manifest:planning"]);
+    assert.deepEqual(beta?.dependencies[0].probe.matched_sources, ["plugin_mcp_manifest"]);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
@@ -891,16 +905,20 @@ test("dependency helper respects declared MCP config_sources and can use package
 test("packaged Khuym inventory stays fully covered and the docs explain the declaration contract", () => {
   const report = buildKhuymDependencyReport({ repoRoot: LOCAL_REPO_ROOT });
   const skillText = fs.readFileSync(LOCAL_USING_KHUYM_SKILL_PATH, "utf8");
-  const planningMcp = JSON.parse(
+  const pluginManifest = JSON.parse(
     fs.readFileSync(
-      path.join(LOCAL_REPO_ROOT, "plugins", "khuym", "skills", "planning", "mcp.json"),
+      path.join(LOCAL_REPO_ROOT, "plugins", "khuym", ".codex-plugin", "plugin.json"),
       "utf8",
     ),
+  );
+  const pluginMcp = JSON.parse(
+    fs.readFileSync(path.join(LOCAL_REPO_ROOT, "plugins", "khuym", ".mcp.json"), "utf8"),
   );
 
   assert.equal(report.summary.skills_total, report.summary.skills_covered);
   assert.equal(report.summary.skills_uncovered, 0);
   assert.deepEqual(report.uncovered_skills, []);
+  assert.equal(pluginManifest.mcpServers, "./.mcp.json");
 
   assert.match(skillText, /## Dependency Declaration Contract/);
   assert.match(skillText, /kind: command/);
@@ -911,7 +929,7 @@ test("packaged Khuym inventory stays fully covered and the docs explain the decl
     /bash scripts\/check-markdown-links\.sh plugins\/khuym\/skills\/using-khuym\/SKILL\.md/,
   );
   assert.match(skillText, /bash scripts\/sync-skills\.sh --dry-run/);
-  assert.deepEqual(planningMcp.gkg.includeTools, [
+  assert.deepEqual(pluginMcp.gkg.includeTools, [
     "list_projects",
     "index_project",
     "repo_map",

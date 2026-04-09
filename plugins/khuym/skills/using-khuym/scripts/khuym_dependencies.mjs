@@ -219,10 +219,29 @@ function parseMcpServerNamesFromJson(filePath) {
   }
 }
 
+function resolvePluginMcpManifestPath(pluginRoot) {
+  const pluginManifestPath = path.join(pluginRoot, ".codex-plugin", "plugin.json");
+  if (!fs.existsSync(pluginManifestPath)) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(fs.readFileSync(pluginManifestPath, "utf8"));
+    const manifestPath = typeof payload?.mcpServers === "string" ? payload.mcpServers.trim() : "";
+    if (!manifestPath) {
+      return null;
+    }
+    return path.resolve(pluginRoot, manifestPath);
+  } catch {
+    return null;
+  }
+}
+
 function collectMcpSources({ repoRoot, skillsRoot, globalCodexConfigPath }) {
   const sources = [];
   const repoCodexConfigPath = path.join(repoRoot, ".codex", "config.toml");
   const globalConfigPath = globalCodexConfigPath || path.join(os.homedir(), ".codex", "config.toml");
+  const pluginRoot = path.resolve(path.join(skillsRoot, ".."));
 
   sources.push({
     key: "repo_codex_config",
@@ -238,25 +257,14 @@ function collectMcpSources({ repoRoot, skillsRoot, globalCodexConfigPath }) {
     server_names: parseMcpServerNamesFromToml(globalConfigPath),
   });
 
-  if (!fs.existsSync(skillsRoot)) {
-    return sources;
-  }
-
-  for (const entry of fs.readdirSync(skillsRoot, { withFileTypes: true })) {
-    if (!entry.isDirectory()) {
-      continue;
-    }
-    const manifestPath = path.join(skillsRoot, entry.name, "mcp.json");
-    if (!fs.existsSync(manifestPath)) {
-      continue;
-    }
-    sources.push({
-      key: `skill_mcp_manifest:${entry.name}`,
-      type: "json",
-      path: manifestPath,
-      server_names: parseMcpServerNamesFromJson(manifestPath),
-    });
-  }
+  const pluginMcpManifestPath =
+    resolvePluginMcpManifestPath(pluginRoot) || path.join(pluginRoot, ".mcp.json");
+  sources.push({
+    key: "plugin_mcp_manifest",
+    type: "json",
+    path: pluginMcpManifestPath,
+    server_names: parseMcpServerNamesFromJson(pluginMcpManifestPath),
+  });
 
   return sources;
 }

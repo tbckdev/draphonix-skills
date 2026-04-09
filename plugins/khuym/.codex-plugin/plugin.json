@@ -1,6 +1,6 @@
 {
   "name": "khuym",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "description": "Khuym: validate-first multi-agent skills for phase contracts, stories, swarming, and execution",
   "author": {
     "name": "hoangnb24",
@@ -17,6 +17,7 @@
     "multi-agent"
   ],
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Khuym",
     "shortDescription": "Validate-first skills for agentic software delivery",

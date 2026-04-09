@@ -14,7 +14,7 @@ metadata:
     - id: gkg
       kind: mcp_server
       server_names: [gkg]
-      config_sources: [repo_codex_config, global_codex_config, skill_mcp_manifest:planning]
+      config_sources: [repo_codex_config, global_codex_config, plugin_mcp_manifest]
       missing_effect: unavailable
       reason: This skill's intelligence queries require the gkg MCP server.
 ---
@@ -41,9 +41,9 @@ Before using it, confirm the `gkg` MCP server is available from one of the decla
 
 - repo-local `.codex/config.toml`
 - user-level `~/.codex/config.toml`
-- packaged manifest `plugins/khuym/skills/planning/mcp.json`
+- packaged plugin manifest `plugins/khuym/.mcp.json`
 
-The packaged planning manifest is the repo's built-in fallback for the expected `gkg` query tools. If none of those sources expose `gkg`, use the [Fallback Commands](#fallback-without-gkg) section below.
+The packaged plugin manifest is the repo's built-in fallback for the expected `gkg` query tools. If none of those sources expose `gkg`, use the [Fallback Commands](#fallback-without-gkg) section below.
 
 Before doing any discovery query, check the session scout output from `node .codex/khuym_status.mjs --json`:
 
@@ -56,7 +56,7 @@ Do **not** treat the local `gkg` binary as the normal discovery path for this sk
 
 ## MCP Tool Mapping
 
-The supported MCP tool surface for `gkg` in this repo is declared in `plugins/khuym/skills/planning/mcp.json`.
+The supported MCP tool surface for `gkg` in this repo is declared in `plugins/khuym/.mcp.json`.
 
 Use these tools conceptually through the MCP server:
 
