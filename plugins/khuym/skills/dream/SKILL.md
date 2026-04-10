@@ -1,5 +1,5 @@
 ---
-name: "khuym:dream"
+name: dream
 description: >-
   Use when you need a manual dream-style consolidation pass over Codex artifacts
   and existing Khuym learnings, including bootstrap-first scans, recurring-window

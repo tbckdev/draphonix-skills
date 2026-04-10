@@ -1,5 +1,5 @@
 ---
-name: khuym:swarming
+name: swarming
 description: Orchestrates parallel worker agents for phase execution. Use after the khuym:validating skill approves the current phase for execution. Initializes the overseer/orchestrator context, spawns bounded worker subagents, monitors Agent Mail for completions/blockers/file conflicts, coordinates rescues and course corrections, and hands off either to planning for the next phase or to reviewing after the final phase. The orchestrator TENDS — it never implements beads directly.
 metadata:
   version: '1.0'

@@ -1,5 +1,5 @@
 ---
-name: khuym:executing
+name: executing
 description: >-
   Per-agent worker loop for the khuym ecosystem. Load when you are a worker subagent
   spawned by the khuym:swarming skill. Implements the Flywheel single-agent loop (register,

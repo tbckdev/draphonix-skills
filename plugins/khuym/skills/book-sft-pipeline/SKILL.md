@@ -1,7 +1,6 @@
 ---
 name: book-sft-pipeline
-description: This skill should be used when the user asks to "fine-tune on books", "create SFT dataset", "train style model", "extract ePub text", or mentions style transfer, LoRA training, book segmentation, or author voice replication.
-version: 2.0.0
+description: Use when the user asks to fine-tune on books, create an SFT dataset from books, train a style-transfer or author-voice model, extract ePub text, segment long-form book content, or prepare literary data for LoRA or small-model training.
 metadata:
   dependencies: []
 ---

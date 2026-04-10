@@ -190,8 +190,9 @@
 - ✅ Agent follows core rule under [pressure type] pressure
 - ✅ Agent cites skill sections when justifying choices
 - ✅ [Other passing criteria]
-- ✅ `agentskills validate` passes
-- ✅ SKILL.md < 400 lines
+- ✅ `quick_validate.py` passes
+- ✅ Markdown links and skill sync checks pass
+- ✅ SKILL.md is lean enough for repeated use
 
 **Total iterations required:** [N]
 

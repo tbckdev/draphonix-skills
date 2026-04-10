@@ -1,10 +1,10 @@
 ---
-name: khuym:compounding
+name: compounding
 description: >-
   Capture learnings from completed feature work to make future work easier.
   Invoke after reviewing completes and the feature is merged. Runs three parallel
   analysis subagents (patterns/decisions/failures), synthesizes into
-  history/learnings/YYYYMMDD-<slug>.md, promotes critical items to
+  history/learnings dated markdown entries, promotes critical items to
   critical-patterns.md. Trigger phrases: what did we learn, capture learnings,
   compound, lessons learned, document what we found, khuym:compounding skill.
   Key output: critical-patterns.md is read by every planning and exploring

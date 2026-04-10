@@ -1,5 +1,5 @@
 ---
-name: khuym:using-khuym
+name: using-khuym
 description: Bootstrap meta-skill for the khuym agentic development ecosystem. Load first on any khuym project. Lists all 9+2 skills with routing logic, session scout/bootstrap, small-change vs standard-feature vs high-risk mode selection, go mode (full-auto pipeline with 4 human gates), priority rules, and state resume. Invoke when starting a new session, choosing which skill to use, running the full pipeline end-to-end, or resuming after a handoff.
 metadata:
   version: '2.2'

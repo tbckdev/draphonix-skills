@@ -1,5 +1,5 @@
 ---
-name: khuym:reviewing
+name: reviewing
 description: Post-execution quality verification skill for the khuym ecosystem. Invoke after the final phase swarm completes. Runs 5 parallel specialist review agents, 3-level artifact verification, human UAT, and finishing (PR, cleanup, epic close). Review issues become beads instead of per-finding markdown files; P1 still blocks merge while P2/P3 become non-blocking follow-up beads. Absorbs finishing responsibilities and hands off to compounding.
 metadata:
   version: '1.0'

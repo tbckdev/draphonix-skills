@@ -1,5 +1,5 @@
 ---
-name: khuym:validating
+name: validating
 description: |
   The critical gate between planning and execution in the khuym ecosystem. Load this skill after planning has written phase-plan.md, the user has approved the phase plan, and the current phase has been decomposed into stories and beads. Verifies the current phase contract, story map, and bead graph across 8 structural dimensions, executes time-boxed spikes for HIGH-risk items, polishes current-phase beads with bv graph analytics, and requires explicit user approval before any code is written.
 metadata:

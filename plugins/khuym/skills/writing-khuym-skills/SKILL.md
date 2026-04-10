@@ -1,5 +1,5 @@
 ---
-name: khuym:writing-khuym-skills
+name: writing-khuym-skills
 description: Use when creating a new khuym skill, editing an existing khuym skill, or verifying a skill works under pressure before deploying. Use when you need an agent skill to be bulletproof against rationalization. Do NOT use for project-specific AGENTS.md conventions or one-off solutions.
 metadata:
   dependencies: []
@@ -69,13 +69,15 @@ Do not add content for hypothetical cases you didn't observe — hypothetical co
 
 **SKILL.md checklist:**
 - [ ] YAML frontmatter starts on line 1 (`---`)
-- [ ] `name`: letters/numbers/hyphens only, matches directory name
+- [ ] `name`: bare hyphen-case, matches the directory name exactly
 - [ ] `description`: starts with "Use when..." — **triggering conditions ONLY, no workflow summary**
 - [ ] Description is third-person, ≤1024 chars
-- [ ] Body < 400 lines (move details to `references/`)
+- [ ] Body stays lean; prefer < 400 lines and move overflow into `references/` when practical
 - [ ] Uses persuasion principles (see table below)
 - [ ] HARD-GATE markers on critical stops
 - [ ] `references/` files never nested more than one level deep
+
+For Khuym plugin skills specifically, keep frontmatter `name` bare. The plugin wrapper adds the `khuym:` prefix when the skill is surfaced to agents.
 
 **Description trap (most common mistake):**
 Workflow summary in description → Claude follows description instead of reading skill body. Every time.
@@ -128,8 +130,12 @@ Three diagnoses:
 
 **Run validation:**
 ```bash
-pip install -q skills-ref && agentskills validate skills/writing-khuym-skills/
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" plugins/khuym/skills/<skill-name>
+bash scripts/check-markdown-links.sh plugins/khuym/skills/<skill-name>/SKILL.md
+bash scripts/sync-skills.sh --dry-run
 ```
+
+If the edited skill owns a repo-local test script, run that too.
 
 **Create CREATION-LOG.md** documenting the full TDD process (see `references/creation-log-template.md`):
 - Source material and extraction decisions

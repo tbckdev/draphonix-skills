@@ -281,7 +281,7 @@ test("installed khuym_status text distinguishes missing commands from missing MC
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies:",
         "    - id: missing-cli",
@@ -350,7 +350,7 @@ test("dependency report distinguishes dependency-free packaged skills from uncov
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies: []",
         "---",
@@ -364,7 +364,7 @@ test("dependency report distinguishes dependency-free packaged skills from uncov
       path.join(betaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:beta",
+        "name: beta",
         "description: uncovered fixture",
         "---",
         "",
@@ -415,7 +415,7 @@ test("khuym_status text surfaces uncovered packaged skills instead of skipping t
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies: []",
         "---",
@@ -429,7 +429,7 @@ test("khuym_status text surfaces uncovered packaged skills instead of skipping t
       path.join(betaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:beta",
+        "name: beta",
         "description: uncovered fixture",
         "---",
         "",
@@ -467,7 +467,7 @@ test("checkRepo promotes missing dependency data into an operator-facing warning
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies:",
         "    - id: missing-cli",
@@ -523,7 +523,7 @@ test("onboard check JSON includes dependency warning summary when dependencies a
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies:",
         "    - id: missing-cli",
@@ -590,7 +590,7 @@ test("session-start hook emits dependency warning with command-vs-MCP split when
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies:",
         "    - id: missing-cli",
@@ -678,7 +678,7 @@ test("entry surfaces share the same missing-command vs missing-MCP wording bound
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies:",
         "    - id: missing-cli",
@@ -753,7 +753,7 @@ test("dependency helper marks missing command and missing mcp_server dependencie
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies:",
         "    - id: must-have-command",
@@ -842,7 +842,7 @@ test("dependency helper respects declared MCP config_sources and can use package
       path.join(alphaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:alpha",
+        "name: alpha",
         "metadata:",
         "  dependencies:",
         "    - id: gkg",
@@ -863,7 +863,7 @@ test("dependency helper respects declared MCP config_sources and can use package
       path.join(betaDir, "SKILL.md"),
       [
         "---",
-        "name: khuym:beta",
+        "name: beta",
         "metadata:",
         "  dependencies:",
         "    - id: gkg",

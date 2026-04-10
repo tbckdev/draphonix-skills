@@ -1,11 +1,11 @@
 ---
-name: khuym:exploring
+name: exploring
 description: >-
   Use before any feature work, refactor, or behavior modification. Extracts locked
   decisions from the user through Socratic dialogue BEFORE research or planning begins.
   Implements GSD discuss-phase + Superpowers brainstorming + CE scope-tiering.
   Trigger phrases: build, add, change, implement, design, figure out what we need,
-  brainstorm, exploring. Output is history/<feature>/CONTEXT.md — the single source
+  brainstorm, exploring. Output is the feature CONTEXT.md file in history/ — the single source
   of truth for all downstream agents (planning, validating, swarming).
 metadata:
   version: '1.0'

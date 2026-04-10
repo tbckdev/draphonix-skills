@@ -27,6 +27,13 @@ function parseInlineList(value) {
     .filter(Boolean);
 }
 
+function formatPluginSkillName(skillName) {
+  if (!skillName) {
+    return skillName;
+  }
+  return skillName.includes(":") ? skillName : `khuym:${skillName}`;
+}
+
 function parseSkillMetadata(frontmatter) {
   const lines = frontmatter.split(/\r?\n/);
   let inMetadata = false;
@@ -134,7 +141,7 @@ function parseSkillFile(skillFilePath) {
   const parsedMetadata = parseSkillMetadata(frontmatter);
 
   return {
-    skill_name: skillName,
+    skill_name: formatPluginSkillName(skillName),
     skill_file: skillFilePath,
     metadata: parsedMetadata.metadata,
     dependencies: parsedMetadata.dependencies_declared

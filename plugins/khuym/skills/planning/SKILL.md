@@ -1,5 +1,5 @@
 ---
-name: khuym:planning
+name: planning
 description: >-
   Research the codebase, turn locked decisions into a plain-English phase plan,
   and after approval prepare only the current phase for validating. Use after
