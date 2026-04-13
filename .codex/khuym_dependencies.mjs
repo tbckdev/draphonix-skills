@@ -220,7 +220,11 @@ function parseMcpServerNamesFromJson(filePath) {
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
       return [];
     }
-    return Object.keys(payload);
+    const manifest =
+      payload.mcpServers && typeof payload.mcpServers === "object" && !Array.isArray(payload.mcpServers)
+        ? payload.mcpServers
+        : payload;
+    return Object.keys(manifest);
   } catch {
     return [];
   }
