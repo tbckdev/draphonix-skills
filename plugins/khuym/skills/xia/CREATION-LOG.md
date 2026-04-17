@@ -123,3 +123,24 @@ Observed result:
 Residual follow-up:
 
 - One pass returned a slightly process-aware phrase about being interrupted while wrapping up. This did not break the research-brief contract, but if that style shows up repeatedly in later tests, tighten the skill to prefer user-facing conclusions only.
+
+## Second Pass: April 2026 Hardening
+
+This follow-up pass focused on making the skill harder to misread and easier to validate under pressure.
+
+Changes added in this pass:
+
+1. Tightened the frontmatter description so it stays trigger-only instead of summarizing the workflow.
+2. Added a "Start Here" sequence to make the required research order explicit before the phased workflow begins.
+3. Promoted repo-shape classification and version verification into first-class requirements so agents do not guess the environment from memory or naming.
+4. Added a tool-routing section that clarifies the role split between local repo evidence, `deepwiki`, `exa`, and synthesis.
+5. Added an evidence-discipline contract that forces explicit `Local`, `Upstream`, `Docs`, and `Inference` boundaries in the output.
+6. Added an escalation rule for the narrow case where two viable paths differ materially and one question is justified.
+7. Added a durable `references/pressure-scenarios.md` file so future RED/GREEN runs can test the exact shortcuts this skill is supposed to prevent.
+8. Expanded the research brief template to require an evidence ledger, source pack, confidence, and a rejected-alternatives explanation.
+
+Why these were worth adding:
+
+- The first version already established the right research order, but it still left too much room for agents to blur evidence sources or skip directly from "I searched" to "here is the plan."
+- The tightened trigger line follows `khuym:writing-khuym-skills` more closely and reduces the risk that agents treat the description as a workflow substitute.
+- The new pressure scenarios make the skill easier to re-test when it drifts, especially around stack-guessing, local-search skipping, docs mismatch handling, and research-while-coding shortcuts.

@@ -4,7 +4,14 @@ Use this template before implementation begins.
 
 Keep the brief concise, but make the evidence boundaries explicit.
 
-## Current Repo Stack Summary
+## Bottom Line
+
+- Recommendation:
+- Why this is the lightest credible path:
+- Confidence (`0-100%`):
+- Next step:
+
+## Repo Snapshot
 
 - Repo type:
 - Primary languages and runtimes:
@@ -20,7 +27,16 @@ Keep the brief concise, but make the evidence boundaries explicit.
 - Assumptions from the request:
 - Assumptions that still need confirmation:
 
-## Existing Local Functionality Found
+## Evidence Ledger
+
+Record the highest-signal evidence, not every artifact you touched.
+
+- `Local`:
+- `Upstream`:
+- `Docs`:
+- `Inference`:
+
+## Local Findings
 
 - Relevant files, modules, scripts, docs, or tests:
 - Existing abstractions or extension points:
@@ -28,7 +44,7 @@ Keep the brief concise, but make the evidence boundaries explicit.
 - What can likely be reused:
 - What appears missing locally:
 
-## Relevant Upstream Patterns Found
+## Upstream Findings
 
 - Repositories inspected:
 - Pattern or capability already present upstream:
@@ -36,7 +52,7 @@ Keep the brief concise, but make the evidence boundaries explicit.
 - How closely the upstream pattern matches this repo:
 - Any upstream gaps or uncertainties:
 
-## Latest Documentation Findings
+## Docs Findings
 
 - Official sources checked:
 - Version-matched vs latest-stable status:
@@ -46,12 +62,19 @@ Keep the brief concise, but make the evidence boundaries explicit.
 
 ## Recommendation
 
-Choose one primary recommendation and explain why:
+Explain the recommendation clearly:
 
 - Reuse existing local functionality
-- Adapt an upstream pattern
 - Use built-in library/framework capability
+- Adapt an upstream pattern
 - Build from scratch
+
+Include:
+
+- Primary recommendation:
+- Why this is the lightest credible path:
+- Why the next-best alternative lost:
+- What would change the recommendation:
 
 ## Risks, Unknowns, And Follow-Up Questions
 
@@ -59,6 +82,14 @@ Choose one primary recommendation and explain why:
 - Evidence gaps:
 - Version uncertainties:
 - Follow-up questions for the user, if any:
+
+## Source Pack
+
+List the exact materials that shaped the brief:
+
+- Local files read:
+- Upstream repositories or pages checked:
+- Official docs domains or pages checked:
 
 ## Evidence Boundary
 

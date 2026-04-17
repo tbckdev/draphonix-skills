@@ -1,4 +1,4 @@
 interface:
-  display_name: "Xia"
-  short_description: "Research-first feature discovery"
-  default_prompt: "Use $xia to research this feature before we implement it."
+  display_name: "Xia Research Scout"
+  short_description: "Map the repo before you build"
+  default_prompt: "Use $xia to map this repo, find reusable local code, check upstream patterns and current docs, then recommend the lightest path before we implement anything."

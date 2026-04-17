@@ -1,6 +1,6 @@
 ---
 name: xia
-description: Use when the user asks to add, change, integrate, design, or evaluate a feature and the work should begin with research before implementation. Forces a repo-first discovery pass that detects the real stack from local artifacts, finds existing local functionality and extension points, checks relevant upstream GitHub repositories for reusable patterns, reviews the latest official documentation for the libraries and services involved, and produces a concise research brief before any coding starts. Skip only when the user explicitly says to bypass research.
+description: Research-first feature discovery for unfamiliar, ambiguous, or high-risk implementation work. Use when Codex should map the real repo stack, find reusable local code, check upstream patterns, and verify current official docs before planning or implementing a feature.
 metadata:
   dependencies:
     - id: exa
@@ -19,39 +19,88 @@ metadata:
 
 # Xia
 
-Start feature work by proving what already exists before proposing or writing new code.
+Xia is the anti-reinvention scout.
 
-`xia` is a research-first skill for requests that would otherwise tempt the agent to jump straight into implementation. Its job is to reduce duplicate work, surface built-in capabilities early, and keep recommendations grounded in the actual repository instead of generic advice.
+Use it to answer five questions before we build anything:
+
+1. What is this repo really?
+2. What already exists locally?
+3. What does the ecosystem already support?
+4. What do the current official docs actually recommend?
+5. What is the lightest credible path from here?
+
+The output is a short research brief, not code.
+
+## Best For
+
+- features in unfamiliar repos
+- requests that might already be supported locally or by the framework
+- integration work where version details matter
+- high-risk changes where a wrong assumption would waste time
+
+## Not For
+
+- tiny self-contained edits where the repo seam is already obvious
+- purely mechanical changes such as renames or formatting
+- tasks where the user explicitly says to skip research and implement now
+- follow-up implementation after the research brief is already done
 
 ## HARD-GATE
 
-Do not write code, edit files, or propose an implementation plan until the research brief is complete.
+Do not write code or edit files until the research brief is complete.
 
 The only exception is when the user explicitly says to skip research or clearly asks for immediate implementation.
 
-## Activate With A Repo-First Mindset
+If the evidence supports two materially different paths, finish the brief first and then ask one targeted question instead of guessing.
 
-Do not assume the repository is a standard web app.
+## Choose Depth
 
-It may be:
+Pick the lightest mode that still makes the recommendation trustworthy.
 
-- a plugin repo
-- a skill repo
-- an infrastructure repo
-- a CLI/tooling repo
-- a mixed monorepo with several runtimes
+- `Quick`
+  Use for low-risk questions where the local seam is likely easy to find.
+  Do: repo contract, local seam search, brief recommendation.
+- `Standard`
+  Default mode.
+  Do: local repo mapping, local reuse search, upstream pattern check, official docs check, brief recommendation.
+- `Deep`
+  Use for cross-cutting, version-sensitive, or architecture-heavy work.
+  Do everything in `Standard`, plus wider repo coverage, more than one upstream comparison if needed, and clearer risk analysis.
 
-Treat the repository itself as the source of truth for what the system is and how it is supposed to evolve.
+If unsure, use `Standard`.
 
-## Phase 1: Detect The Real Stack
+## Workflow
 
-Read the repo contract first when it exists:
+Run this sequence in order:
+
+1. Check whether research was waived.
+2. Read the repo contract first when it exists.
+3. Map the repo from real artifacts.
+4. Search locally for reuse before invention.
+5. Check upstream patterns only after the local picture is clear.
+6. Check current official docs only after you know what stack and versions you are targeting.
+7. Return the research brief.
+
+Do not reorder this flow. That is how agents drift into generic advice and duplicate work.
+
+## Step 1: Map The Repo
+
+Start with the repo contract when it exists:
 
 - `AGENTS.md`
 - `README.md`
 - repo-local docs that explain architecture, workflows, or packaging
 
-Then infer the actual stack from real artifacts such as:
+Then classify the repo from evidence:
+
+- app or service
+- package, plugin, or library
+- CLI or developer tooling
+- infrastructure or automation repo
+- mixed monorepo with several runtimes
+- something custom that does not fit a standard label
+
+Infer the stack from real artifacts such as:
 
 - `package.json`, lockfiles, `tsconfig*`, workspace manifests
 - `pyproject.toml`, `requirements*.txt`, `poetry.lock`
@@ -60,7 +109,7 @@ Then infer the actual stack from real artifacts such as:
 - framework config files and entrypoints
 - scripts, tests, and build commands that reveal how the repo really works
 
-Build a short internal stack summary before moving on:
+Capture a short stack ledger:
 
 - primary languages and runtimes
 - framework or platform clues
@@ -68,11 +117,13 @@ Build a short internal stack summary before moving on:
 - major tools and external services
 - obvious verification commands
 
-If versions are detectable from manifests or lockfiles, capture them now because later documentation research should prefer version-matched sources.
+If versions are detectable from manifests or lockfiles, capture them now so later docs research can stay version-aware.
+
+If the request depends on runtime or CLI behavior and the installed version is cheap to verify, verify the local binary too instead of assuming the manifest tells the whole story.
 
 If exact versions are not detectable, say so in the brief instead of pretending they are known.
 
-## Phase 2: Search The Local Repo Before Inventing Anything
+## Step 2: Search Local Reuse First
 
 Inspect the local repository for:
 
@@ -83,7 +134,7 @@ Inspect the local repository for:
 
 Use local inspection first. Prefer repository evidence over assumptions.
 
-Useful targets include:
+Useful targets:
 
 - feature-adjacent directories and modules
 - tests that reveal supported behavior
@@ -91,27 +142,29 @@ Useful targets include:
 - prior docs or ADR-style notes
 - config and env validation that constrain the implementation
 
-When available, use repo intelligence tools as accelerators, but do not let them replace reading the actual files.
+When available, use repo intelligence tools as accelerators, but do not let them replace reading the files that actually prove behavior.
 
-The local search output should answer:
+This step should answer:
 
 - what already exists
 - what can be reused
 - what extension points are available
 - what is missing
 
-## Phase 3: Research Upstream Patterns
+Do not claim something is missing until you have checked the most likely code, config, docs, and test surfaces that would prove it exists.
+
+## Step 3: Check Upstream Patterns
 
 Look outward only after the local picture is clear.
 
-Use `deepwiki` to inspect relevant public GitHub repositories when you need to understand:
+Use the upstream repo research path, preferably `deepwiki`, when you need to understand:
 
 - how a repository is organized
 - where similar functionality already lives upstream
 - whether a capability already appears to exist
 - which files or areas are the best pattern anchors
 
-Use `deepwiki` as best-effort guidance, not as a hard dependency. If a repo is unavailable or not indexed there:
+Treat `deepwiki` as best-effort guidance, not as a hard dependency. If a repo is unavailable or not indexed there:
 
 - fall back to direct GitHub-oriented research paths
 - continue the investigation instead of blocking
@@ -125,9 +178,9 @@ Prefer upstream repositories that are actually relevant to the detected stack:
 
 Do not turn upstream research into generic inspiration hunting. The goal is to find reusable patterns, constraints, or proof that the feature already exists elsewhere.
 
-## Phase 4: Research The Latest Official Documentation
+## Step 4: Check Current Official Docs
 
-Use `exa` to find current official documentation, release guidance, and implementation notes for the libraries, frameworks, and services involved.
+Use the official-doc research path, preferably `exa`, to find current documentation, release guidance, and implementation notes for the libraries, frameworks, and services involved.
 
 Prefer official sources over blog posts or community summaries whenever possible.
 
@@ -145,19 +198,30 @@ This phase should answer:
 - version-specific caveats that matter for this repo
 - any major incompatibilities or migration risks
 
-## Phase 5: Produce The Research Brief
+If local repo behavior and official docs disagree, treat the local repo as the truth for current behavior and call out the mismatch explicitly.
+
+## Tool Roles
+
+Use tools by role, not by habit:
+
+| Need | Primary path | Rule |
+|---|---|---|
+| Current repo truth | Local files, manifests, configs, tests, scripts | This comes first and is never optional |
+| Existing public patterns | `deepwiki` | Best-effort only; do not block if the repo is unavailable or not indexed |
+| Current official guidance | `exa` | Prefer official docs domains and version-matched material |
+| Final synthesis | Research brief | Separate `Local`, `Upstream`, `Docs`, and `Inference` explicitly |
+
+If `deepwiki` is unavailable, continue with local repo evidence plus direct public-repo reading paths.
+
+If `exa` is unavailable, continue with official docs through the current search/browser capability, but keep the same official-source bias and version-matching discipline.
+
+## Step 5: Return A Short Research Brief
 
 Before any implementation work, return a concise research brief using `references/research-brief-template.md`.
 
-The brief must separate:
-
-- what was found locally
-- what was found upstream
-- what came from official documentation
-- what is only an inference
-
 The brief must include:
 
+- bottom line
 - current repo stack summary
 - feature understanding and assumptions
 - existing local functionality already found
@@ -165,21 +229,45 @@ The brief must include:
 - latest documentation findings
 - a recommendation
 - risks, unknowns, and follow-up questions if needed
+- confidence in the primary recommendation
+- the next concrete step that should happen after research
 
-## Recommendation Ladder
+Every non-trivial claim in the brief must be labeled as:
+
+- `Local` for findings from this repository
+- `Upstream` for findings from public GitHub repositories
+- `Docs` for findings from official documentation
+- `Inference` for conclusions drawn from the evidence
+
+Do not blur these labels together.
+
+## Recommendation Rule
 
 Choose the lightest credible path in this order:
 
 1. Reuse existing local functionality.
-2. Adapt an upstream pattern that fits the repo.
-3. Use built-in framework or library capabilities.
+2. Use built-in framework or library capabilities that fit the repo's current version.
+3. Adapt an upstream pattern that fits the repo.
 4. Build from scratch only when the other options are not sufficient.
 
 If you recommend building from scratch, explain why reuse, adaptation, and built-in capabilities were not enough.
 
+Also explain why the chosen path beats the next-best alternative. A recommendation without an explicit tradeoff is too easy to rationalize.
+
+## Ask Only When It Matters
+
+Ask a targeted follow-up question only when one of these is true:
+
+- two viable paths differ materially in product behavior, operational risk, or migration cost
+- the repo evidence conflicts with the user's wording in a way that changes the recommendation
+- version or environment uncertainty would change the implementation path
+
+Otherwise, make the best evidence-backed recommendation and move forward.
+
 ## Guardrails
 
 - Do not guess the stack from folder names alone.
+- Do not guess the repo type from branding, naming, or prior memory alone.
 - Do not stop at docs if manifests, configs, scripts, or tests would refine the picture.
 - Do not claim something is missing until the local repo search says it is missing.
 - Do not treat `deepwiki` availability as required for progress.
@@ -187,24 +275,25 @@ If you recommend building from scratch, explain why reuse, adaptation, and built
 - Do not blur local findings, upstream findings, docs findings, and inference together.
 - Do not give generic advice that is not anchored to the detected stack.
 - Do not start coding before the research brief unless the user explicitly waives research.
+- Do not recommend a path without explaining why the stronger-looking alternatives were rejected.
 
-## Anti-Patterns
+## Red Flags
 
-**"This looks familiar, I already know the stack."**
-Read the actual repo artifacts anyway. Familiar-looking repos often hide important packaging, runtime, or plugin constraints.
+Stop and correct course immediately if you catch yourself doing any of these:
 
-**"I can build it faster from scratch than tracing existing code."**
-Search the local repo first. Speed without reuse often creates duplicate abstractions and misses house conventions.
+- summarizing the stack before reading the files that prove it
+- saying "this repo probably uses X" without artifact evidence
+- jumping to web research because local search feels slower
+- treating `deepwiki` or indexing gaps as a reason to skip upstream research entirely
+- citing blogs or AI summaries when official docs are available
+- starting to design or code before the brief is complete
+- collapsing `Local`, `Upstream`, `Docs`, and `Inference` into one blended narrative
 
-**"The local repo does not obviously contain it, so upstream research is optional."**
-Check upstream patterns when the feature touches framework or library behavior. The capability may already exist outside the repo.
+## Quick Smell Test
 
-**"General docs are good enough."**
-Prefer official, current, version-matched documentation whenever you can detect versions.
-
-**"I will research while coding and summarize later."**
-That violates the purpose of this skill. Finish the brief first.
+If the brief does not clearly answer "what exists, what is reusable, what the docs say, and what path to take," it is not done yet.
 
 ## References
 
 - `references/research-brief-template.md` - required brief structure before implementation
+- `references/pressure-scenarios.md` - pressure tests for future RED/GREEN validation of this skill
