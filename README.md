@@ -226,6 +226,7 @@ Standalone skills remain available, but they are intentionally secondary to the 
 | `bootstrap-project-context` | Bootstrap a new session by reading repo docs and mapping the codebase |
 | `prompt-leverage` | Upgrade raw prompts into stronger execution-ready prompts |
 | `refresh-project-docs` | Refresh README and docs so they match the current repo state |
+| `xia` | Research feature requests before implementation to avoid reinventing existing patterns |
 
 ## Requirements
 

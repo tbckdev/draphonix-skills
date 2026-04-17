@@ -1,0 +1,4 @@
+interface:
+  display_name: "Xia"
+  short_description: "Research-first feature discovery"
+  default_prompt: "Use $xia to research this feature before we implement it."
